@@ -1,10 +1,27 @@
 type token =
-  | LETTER of (char)
+  | NAME of string
+  | INT of int
+  | TRUE of bool
+  | FALSE of bool
   | PLUS
-  | STAR
+  | MINUS
+  | DIVIDE
+  | TIMES
+  | EQUAL
+  | AMP
+  | BAR
+  | COLON
+  | SEMICOLON
+  | RANGLE
+  | LANGLE
+  | EXCLAIM
+  | DASH
+  | COMMA
   | LPAREN
   | RPAREN
+  | LBRACE
+  | RBRACE
   | EOL
 
 val main :
-  (Lexing.lexbuf  -> token) -> Lexing.lexbuf -> Re.re
+  (Lexing.lexbuf  -> token) -> Lexing.lexbuf -> Go.go
