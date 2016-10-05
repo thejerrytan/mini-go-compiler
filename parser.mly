@@ -12,12 +12,82 @@
 %type <Go.go> prog
 %%
 prog:
-  | expr EOL                { $1 }
+    proc block                { $1 }
+  | prog proc block EOL          { $2:: }
 ;
-expr:
-    LETTER                     { Letter $1 }
-  | LPAREN expr RPAREN      { $2 }
-  | expr PLUS expr          { Alt ($1,$3) }
-  | expr expr               { Seq ($1,$2) }
-  | expr STAR               { Star $1 }
+proc:
+    FUNC NAME LBRACE param RBRACE type block    { Letter $1 }
+;
+param:
+     vars type COMMA
+  |  param vars type
+  |
+;
+block:
+    LBRACE statement RBRACE
+;
+statement:
+    statement SEMICOLON statement
+  | GO block
+  | vars LANGLE DASH aexp
+  | vars COLON EQUAL bexp
+  | vars COLON EQUAL NEWCHANNEL
+  | vars EQUAL bexp
+  | WHILE bexp block
+  | IF bexp block ELSE block
+  | RETURN bexp
+  | NAME LPAREN arg RPAREN
+  | PRINT bexp
+;
+bexp:
+    cexp AMP AMP cexp
+    | cexp
+;
+cexp:
+    cterm EQUAL EQUAL cterm
+    | cterm
+;
+cterm:
+    aexp RANGLE aexp
+    | aexp
+;
+aexp:
+    term PLUS term
+    | term MINUS term
+    | term
+;
+term:
+    factor TIMES factor
+    | factor DIVIDE factor
+    | factor
+;
+factor:
+    ints
+    | bools
+    | vars
+    | LANGLE EQUAL vars
+    | EXCLAIM factor
+    | LPAREN bexp RPAREN
+    | NAME LPAREN arg RPAREN
+;
+arg:
+    bexp COMMA
+    | arg bexp
+;
+ints:
+    INT { INT }
+;
+bools:
+    TRUE
+    | FALSE
+vars:
+    VARS
+;
+name:
+    NAME
+;
+type:
+    INT_TYPE
+    | BOOL_TYPE
+    | CHANNEL_TYPE
 ;
