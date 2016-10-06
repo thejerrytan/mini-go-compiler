@@ -1,6 +1,6 @@
 /* File parser.mly */
 %{
-
+  Open go
 %}
 %token <char> LETTER
 %token <int> DIGIT
@@ -12,82 +12,84 @@
 %type <Go.go> prog
 %%
 prog:
-    proc block                { $1 }
-  | prog proc block EOL          { $2:: }
+    proc              { Prog ([]::$1) }
+  | prog proc         { Prog ([]::$1::$2) }
+  | prog block        { Prog ($1, $2) }
 ;
 proc:
-    FUNC NAME LBRACE param RBRACE type block    { Letter $1 }
+    FUNC NAME LBRACE param RBRACE type block    { Proc ($2, List($4), Some($6), $7) }
+  | FUNC NAME LBRACE param RBRACE block         { Proc ($2, List($4), None, $6) }
 ;
 param:
-     vars type COMMA
-  |  param vars type
-  |
+     vars type                      {  }
+  |  param COMMA vars type          {  }
 ;
 block:
-    LBRACE statement RBRACE
+    LBRACE statement RBRACE    { stmt ($2) }
 ;
 statement:
-    statement SEMICOLON statement
-  | GO block
-  | vars LANGLE DASH aexp
-  | vars COLON EQUAL bexp
-  | vars COLON EQUAL NEWCHANNEL
-  | vars EQUAL bexp
-  | WHILE bexp block
-  | IF bexp block ELSE block
-  | RETURN bexp
-  | NAME LPAREN arg RPAREN
-  | PRINT bexp
+    statement SEMICOLON statement         { Seq ($1, $3) }
+  | GO block                              { Go ($2) }
+  | vars LANGLE DASH aexp                 { RcvStmt ($1, $4) }
+  | vars COLON EQUAL bexp                 { Decl ($1, $4) }
+  | vars COLON EQUAL NEWCHANNEL           { DeclChan ($1) }
+  | vars EQUAL bexp                       { Assign ($1, $3) }
+  | WHILE bexp block                      { While ($1, $2) }
+  | IF bexp block ELSE block              { ITE ($1, $2, $3) }
+  | RETURN bexp                           { Return ($2) }
+  | NAME LPAREN arg RPAREN                { FuncCall ($1, $3) }
+  | PRINT bexp                            { Print ($2) }
 ;
 bexp:
-    cexp AMP AMP cexp
-    | cexp
+    cexp AMP AMP cexp        { And ($1, $4) }
+    | cexp                   { $1 }
 ;
 cexp:
-    cterm EQUAL EQUAL cterm
-    | cterm
+    cterm EQUAL EQUAL cterm  { Eq ($1, $4) }
+    | cterm                  { $1 }
 ;
 cterm:
-    aexp RANGLE aexp
-    | aexp
+    aexp RANGLE aexp         { Gt ($1, $3) }
+    | aexp                   { $1 }
 ;
 aexp:
-    term PLUS term
-    | term MINUS term
-    | term
+    term PLUS term          { Plus ($1, $2) }
+    | term MINUS term       { Minus ($1, $2) }
+    | term                  { $1 }
 ;
 term:
-    factor TIMES factor
-    | factor DIVIDE factor
-    | factor
+    factor TIMES factor     { Times ($1, $3) }
+    | factor DIVIDE factor  { Division ($1, $3) }
+    | factor                { $1 }
 ;
 factor:
-    ints
-    | bools
-    | vars
-    | LANGLE EQUAL vars
-    | EXCLAIM factor
-    | LPAREN bexp RPAREN
-    | NAME LPAREN arg RPAREN
+    ints                          { $1 }
+    | bools                       { $1 }
+    | vars                        { $1 }
+    | LANGLE DASH vars            { RcvExp ($3) }
+    | EXCLAIM factor              { Not ($2) }
+    | LPAREN bexp RPAREN          { $1 }
+    | NAME LPAREN arg RPAREN      { FuncExp ($1, $3) }
 ;
 arg:
-    bexp COMMA
-    | arg bexp
+    bexp
+    | arg COMMA bexp
 ;
 ints:
-    INT { INT }
+    INT                     { IConst ($1) }
 ;
 bools:
-    TRUE
-    | FALSE
+    TRUE                    { BConst (true) }
+    | FALSE                 { BConst (false) }
+;
 vars:
     VARS
 ;
 name:
-    NAME
+    NAME           { Var ($1) }
 ;
 type:
-    INT_TYPE
-    | BOOL_TYPE
-    | CHANNEL_TYPE
+    INT_TYPE          { TyInt ($1) }
+    | BOOL_TYPE       { TyBool ($1) }
+    | CHANNEL_TYPE    { TyChan }
 ;

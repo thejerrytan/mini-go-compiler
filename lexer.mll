@@ -27,6 +27,16 @@ rule token = parse
   | int            { INT (int_of_string (Lexing.lexeme lexbuf)) }
   | "true"         { TRUE }
   | "false"        { FALSE }
+  | "go"           { GO }
+  | "if"           { IF }
+  | "else"         { ELSE }
+  | "return"       { RETURN }
+  | "while"        { WHILE }
+  | "print"        { PRINT }
+  | "newChannel"   { NEWCHANNEL }
+  | "int"          { INT_TYPE }
+  | "bool"         { BOOL_TYPE }
+  | "chan int"     { CHANNEL_TYPE }
   | '+'            { PLUS }
   | '-'            { MINUS }
   | '/'            { DIVIDE }
