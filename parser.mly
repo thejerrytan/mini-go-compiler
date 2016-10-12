@@ -2,11 +2,14 @@
 %{
   Open go
 %}
-%token <char> LETTER
-%token <int> DIGIT
+%token <string> NAME VARS
+%token <int> INT
+%token <bool> TRUE FALSE
 %token PLUS MINUS DIVIDE TIMES
 %token EQUAL AMP BAR COLON SEMICOLON RANGLE LANGLE
 %token EXCLAIM DASH COMMA LPAREN RPAREN LBRACE RBRACE
+%token GO IF ELSE RETURN WHILE
+%token PRINT NEWCHANNEL FUNC INT_TYPE BOOL_TYPE CHANNEL_TYPE
 %token EOL EOF
 %start prog             /* the entry point */
 %type <prog> prog
