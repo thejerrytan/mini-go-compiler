@@ -1,6 +1,6 @@
 /* File parser.mly */
 %{
-  Open Go
+  open Go
 %}
 %token <string> NAME VARS
 %token <int> INT
@@ -23,17 +23,17 @@ proc_list:
   | proc_list proc                 { $1 @ [$2] }
 ;
 proc:
-    FUNC NAME LBRACE param RBRACE type block    { Proc ($2, $4, Some($6), $7) }
-  | FUNC NAME LBRACE RBRACE type block          { Proc ($2, [], Some($5), $6) }
+    FUNC NAME LBRACE param RBRACE types block    { Proc ($2, $4, Some($6), $7) }
+  | FUNC NAME LBRACE RBRACE types block          { Proc ($2, [], Some($5), $6) }
   | FUNC NAME LBRACE param RBRACE block         { Proc ($2, $4, None, $6) }
   | FUNC NAME LBRACE RBRACE block               { Proc ($2, [], None, $5) }
 ;
 param:
-     vars type                      { [($1, $2)] }
-  |  param COMMA vars type          { $1 @ [($3, $4)] }
+     vars types                      { [($1, $2)] }
+  |  param COMMA vars types          { $1 @ [($3, $4)] }
 ;
 block:
-    LBRACE statement RBRACE    { stmt ($2) }
+    LBRACE statement RBRACE    { $2 }
 ;
 statement:
     statement SEMICOLON statement         { Seq ($1, $3) }
@@ -93,9 +93,9 @@ bools:
     | FALSE                 { BConst (false) }
 ;
 vars:
-    VARS                    { $1 }
+    VARS                    { Var ($1) }
 ;
-type:
+types:
     INT_TYPE          { TyInt }
     | BOOL_TYPE       { TyBool }
     | CHANNEL_TYPE    { TyChan }
