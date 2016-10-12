@@ -1,5 +1,6 @@
 type token =
   | NAME of string
+  | VARS of string
   | INT of int
   | TRUE of bool
   | FALSE of bool
@@ -10,6 +11,7 @@ type token =
   | WHILE
   | PRINT
   | NEWCHANNEL
+  | FUNC
   | INT_TYPE
   | BOOL_TYPE
   | CHANNEL_TYPE
