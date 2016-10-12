@@ -12,20 +12,22 @@
 %type <Go.go> prog
 %%
 prog:
-    block                          { Prog([], $1) }
-  | proc_list block                { }
+    block                          { Prog ([], $1) }
+  | proc_list block                { Prog ($1, $2) }
 ;
 proc_list:
-    proc                           {  }
-  | proc_list proc                 {  }
+    proc                           { [$1] }
+  | proc_list proc                 { $1 @ [$2] }
 ;
 proc:
-    FUNC NAME LBRACE param RBRACE type block    { Proc ($2, List($4), Some($6), $7) }
-  | FUNC NAME LBRACE param RBRACE block         { Proc ($2, List($4), None, $6) }
+    FUNC NAME LBRACE param RBRACE type block    { Proc ($2, $4, Some($6), $7) }
+  | FUNC NAME LBRACE RBRACE type block          { Proc ($2, [], Some($5), $6) }
+  | FUNC NAME LBRACE param RBRACE block         { Proc ($2, $4, None, $6) }
+  | FUNC NAME LBRACE RBRACE block               { Proc ($2, [], None, $6) }
 ;
 param:
-     vars type                      {  }
-  |  param COMMA vars type          {  }
+     vars type                      { [($1, $2)] }
+  |  param COMMA vars type          { $1 @ [($3, $4)] }
 ;
 block:
     LBRACE statement RBRACE    { stmt ($2) }
@@ -33,14 +35,16 @@ block:
 statement:
     statement SEMICOLON statement         { Seq ($1, $3) }
   | GO block                              { Go ($2) }
-  | vars LANGLE DASH aexp                 { RcvStmt ($1, $4) }
+  | vars LANGLE DASH aexp                 { Transmit ($1, $4) }
+  | LANGLE DASH vars                      { RcvStmt $3 }
   | vars COLON EQUAL bexp                 { Decl ($1, $4) }
   | vars COLON EQUAL NEWCHANNEL           { DeclChan ($1) }
   | vars EQUAL bexp                       { Assign ($1, $3) }
-  | WHILE bexp block                      { While ($1, $2) }
-  | IF bexp block ELSE block              { ITE ($1, $2, $3) }
+  | WHILE bexp block                      { While ($2, $3) }
+  | IF bexp block ELSE block              { ITE ($2, $3, $5) }
   | RETURN bexp                           { Return ($2) }
   | NAME LPAREN arg RPAREN                { FuncCall ($1, $3) }
+  | NAME LPAREN RPAREN                    { FuncCall ($1, []) }
   | PRINT bexp                            { Print ($2) }
 ;
 bexp:
@@ -56,13 +60,13 @@ cterm:
     | aexp                   { $1 }
 ;
 aexp:
-    term PLUS term          { Plus ($1, $2) }
-    | term MINUS term       { Minus ($1, $2) }
+    term PLUS aexp          { Plus ($1, $3) }
+    | term MINUS aexp       { Minus ($1, $3) }
     | term                  { $1 }
 ;
 term:
-    factor TIMES factor     { Times ($1, $3) }
-    | factor DIVIDE factor  { Division ($1, $3) }
+    factor TIMES term       { Times ($1, $3) }
+    | factor DIVIDE term    { Division ($1, $3) }
     | factor                { $1 }
 ;
 factor:
@@ -75,8 +79,8 @@ factor:
     | NAME LPAREN arg RPAREN      { FuncExp ($1, $3) }
 ;
 arg:
-    bexp                          { $1 }
-    | arg COMMA bexp              {  }
+    bexp                          { [$1] }
+  | arg COMMA bexp                { $1 @ [$2] }
 ;
 ints:
     INT                     { IConst ($1) }
@@ -86,10 +90,7 @@ bools:
     | FALSE                 { BConst (false) }
 ;
 vars:
-    VARS                    {  }
-;
-name:
-    NAME           { Var ($1) }
+    VARS                    { $1 }
 ;
 type:
     INT_TYPE          { TyInt ($1) }
