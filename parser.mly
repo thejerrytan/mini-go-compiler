@@ -12,9 +12,12 @@
 %type <Go.go> prog
 %%
 prog:
-    proc              { Prog ([]::$1) }
-  | prog proc         { Prog ([]::$1::$2) }
-  | prog block        { Prog ($1, $2) }
+    block                          { Prog([], $1) }
+  | proc_list block                { }
+;
+proc_list:
+    proc                           {  }
+  | proc_list proc                 {  }
 ;
 proc:
     FUNC NAME LBRACE param RBRACE type block    { Proc ($2, List($4), Some($6), $7) }

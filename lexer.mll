@@ -18,7 +18,7 @@ let int     = ['0'-'9'] ['0'-'9']*
 let digit   = ['0'-'9']
 let white   = [' ' '\t']+
 let newline = '\r' | '\n' | "\r\n"
-let name    = ['a'-'z' 'A'-'Z'] ['a'-'z' 'A'-'Z' '0'-'9']*
+let name    = ['a'-'z'] ['a'-'z']*
 
 rule token = parse
     white          { token lexbuf }     (* skip blanks *)
