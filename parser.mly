@@ -38,11 +38,11 @@ block:
 statement:
     statement SEMICOLON statement         { Seq ($1, $3) }
   | GO block                              { Go ($2) }
-  | vars LANGLE DASH aexp                 { Transmit ($1, $4) }
-  | LANGLE DASH vars                      { RcvStmt $3 }
-  | vars COLON EQUAL bexp                 { Decl ($1, $4) }
-  | vars COLON EQUAL NEWCHANNEL           { DeclChan ($1) }
-  | vars EQUAL bexp                       { Assign ($1, $3) }
+  | VARS LANGLE DASH aexp                 { Transmit ($1, $4) }
+  | LANGLE DASH VARS                      { RcvStmt $3 }
+  | VARS COLON EQUAL bexp                 { Decl ($1, $4) }
+  | VARS COLON EQUAL NEWCHANNEL           { DeclChan ($1) }
+  | VARS EQUAL bexp                       { Assign ($1, $3) }
   | WHILE bexp block                      { While ($2, $3) }
   | IF bexp block ELSE block              { ITE ($2, $3, $5) }
   | RETURN bexp                           { Return ($2) }
@@ -76,7 +76,7 @@ factor:
     ints                          { $1 }
     | bools                       { $1 }
     | vars                        { $1 }
-    | LANGLE DASH vars            { RcvExp ($3) }
+    | LANGLE DASH VARS            { RcvExp ($3) }
     | EXCLAIM factor              { Not ($2) }
     | LPAREN bexp RPAREN          { $2 }
     | NAME LPAREN arg RPAREN      { FuncExp ($1, $3) }
@@ -94,9 +94,8 @@ bools:
 ;
 vars:
     VARS                    { Var ($1) }
-;
 types:
     INT_TYPE          { TyInt }
     | BOOL_TYPE       { TyBool }
-    | CHANNEL_TYPE    { TyChan }
+    | CHANNEL_TYPE    { TyChan TyInt}
 ;
