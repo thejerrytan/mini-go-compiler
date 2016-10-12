@@ -1,10 +1,10 @@
 /* File parser.mly */
 %{
-  Open go
+  Open Go
 %}
 %token <string> NAME VARS
 %token <int> INT
-%token <bool> TRUE FALSE
+%token TRUE FALSE
 %token PLUS MINUS DIVIDE TIMES
 %token EQUAL AMP BAR COLON SEMICOLON RANGLE LANGLE
 %token EXCLAIM DASH COMMA LPAREN RPAREN LBRACE RBRACE
@@ -12,7 +12,7 @@
 %token PRINT NEWCHANNEL FUNC INT_TYPE BOOL_TYPE CHANNEL_TYPE
 %token EOL EOF
 %start prog             /* the entry point */
-%type <prog> prog
+%type <Go.prog> prog
 %%
 prog:
     block                          { Prog ([], $1) }
@@ -96,7 +96,7 @@ vars:
     VARS                    { $1 }
 ;
 type:
-    INT_TYPE          { TyInt ($1) }
-    | BOOL_TYPE       { TyBool ($1) }
+    INT_TYPE          { TyInt }
+    | BOOL_TYPE       { TyBool }
     | CHANNEL_TYPE    { TyChan }
 ;
