@@ -94,8 +94,9 @@ bools:
 ;
 vars:
     VARS                    { Var ($1) }
+;
 types:
     INT_TYPE          { TyInt }
     | BOOL_TYPE       { TyBool }
-    | CHANNEL_TYPE    { TyChan TyInt}
+    | CHANNEL_TYPE    { TyChan TyInt }
 ;
