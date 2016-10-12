@@ -72,8 +72,8 @@ factor:
     | NAME LPAREN arg RPAREN      { FuncExp ($1, $3) }
 ;
 arg:
-    bexp
-    | arg COMMA bexp
+    bexp                          { $1 }
+    | arg COMMA bexp              {  }
 ;
 ints:
     INT                     { IConst ($1) }
@@ -83,7 +83,7 @@ bools:
     | FALSE                 { BConst (false) }
 ;
 vars:
-    VARS
+    VARS                    {  }
 ;
 name:
     NAME           { Var ($1) }
