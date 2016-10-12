@@ -8,8 +8,8 @@
 %token EQUAL AMP BAR COLON SEMICOLON RANGLE LANGLE
 %token EXCLAIM DASH COMMA LPAREN RPAREN LBRACE RBRACE
 %token EOL EOF
-%start main             /* the entry point */
-%type <Go.go> prog
+%start prog             /* the entry point */
+%type <prog> prog
 %%
 prog:
     block                          { Prog ([], $1) }
@@ -23,7 +23,7 @@ proc:
     FUNC NAME LBRACE param RBRACE type block    { Proc ($2, $4, Some($6), $7) }
   | FUNC NAME LBRACE RBRACE type block          { Proc ($2, [], Some($5), $6) }
   | FUNC NAME LBRACE param RBRACE block         { Proc ($2, $4, None, $6) }
-  | FUNC NAME LBRACE RBRACE block               { Proc ($2, [], None, $6) }
+  | FUNC NAME LBRACE RBRACE block               { Proc ($2, [], None, $5) }
 ;
 param:
      vars type                      { [($1, $2)] }
@@ -75,12 +75,12 @@ factor:
     | vars                        { $1 }
     | LANGLE DASH vars            { RcvExp ($3) }
     | EXCLAIM factor              { Not ($2) }
-    | LPAREN bexp RPAREN          { $1 }
+    | LPAREN bexp RPAREN          { $2 }
     | NAME LPAREN arg RPAREN      { FuncExp ($1, $3) }
 ;
 arg:
     bexp                          { [$1] }
-  | arg COMMA bexp                { $1 @ [$2] }
+  | arg COMMA bexp                { $1 @ [$3] }
 ;
 ints:
     INT                     { IConst ($1) }

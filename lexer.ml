@@ -657,12 +657,12 @@ and __ocaml_lex_token_rec lexbuf __ocaml_lex_state =
 
   | 2 ->
 # 27 "lexer.mll"
-                   ( NAME )
+                   ( NAME (Lexing.lexeme lexbuf) )
 # 662 "lexer.ml"
 
   | 3 ->
 # 28 "lexer.mll"
-                   ( VARS )
+                   ( VARS (Lexing.lexeme lexbuf) )
 # 667 "lexer.ml"
 
   | 4 ->
