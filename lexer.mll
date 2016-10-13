@@ -15,7 +15,6 @@ let next_line lexbuf =
     }
 }
 let int     = ['0'-'9'] ['0'-'9']*
-let digit   = ['0'-'9']
 let white   = [' ' '\t']+
 let newline = '\r' | '\n' | "\r\n"
 let name    = ['a'-'z'] ['a'-'z']*
@@ -23,10 +22,7 @@ let id      = ['a'-'z'] ['a'-'z' '0'-'9']*
 
 rule token = parse
     white          { token lexbuf }     (* skip blanks *)
-  | newline        { next_line lexbuf; EOL }
-  | name           { NAME (Lexing.lexeme lexbuf) }
-  | id             { VARS (Lexing.lexeme lexbuf) }
-  | int            { INT (int_of_string (Lexing.lexeme lexbuf)) }
+  | newline        { token lexbuf }
   | "true"         { TRUE }
   | "false"        { FALSE }
   | "go"           { GO }
@@ -40,6 +36,9 @@ rule token = parse
   | "int"          { INT_TYPE }
   | "bool"         { BOOL_TYPE }
   | "chan int"     { CHANNEL_TYPE }
+  | name           { print_string "test";NAME (Lexing.lexeme lexbuf) }
+  | id             { print_string "test";VARS (Lexing.lexeme lexbuf) }
+  | int            { INT (int_of_string (Lexing.lexeme lexbuf)) }
   | '+'            { PLUS }
   | '-'            { MINUS }
   | '/'            { DIVIDE }
