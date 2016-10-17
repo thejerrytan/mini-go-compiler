@@ -14,11 +14,8 @@ let next_line lexbuf =
                pos_lnum = pos.pos_lnum + 1
     }
 }
-let int     = ['0'-'9'] ['0'-'9']*
 let white   = [' ' '\t']+
 let newline = '\r' | '\n' | "\r\n"
-let name    = ['a'-'z'] ['a'-'z']*
-let id      = ['a'-'z'] ['a'-'z' '0'-'9']*
 
 rule token = parse
     white          { token lexbuf }     (* skip blanks *)
@@ -36,9 +33,8 @@ rule token = parse
   | "int"          { INT_TYPE }
   | "bool"         { BOOL_TYPE }
   | "chan int"     { CHANNEL_TYPE }
-  | name           { print_string "test";NAME (Lexing.lexeme lexbuf) }
-  | id             { print_string "test";VARS (Lexing.lexeme lexbuf) }
-  | int            { INT (int_of_string (Lexing.lexeme lexbuf)) }
+  | ['a'-'z']      { LETTER ((Lexing.lexeme lexbuf).[0]) }
+  | ['0'-'9']      { DIGIT ((Lexing.lexeme lexbuf).[0]) }
   | '+'            { PLUS }
   | '-'            { MINUS }
   | '/'            { DIVIDE }

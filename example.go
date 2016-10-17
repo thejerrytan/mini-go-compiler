@@ -1,3 +1,8 @@
+func s(a int, b int) int {
+	return a + b
+}
+
 { 
-  return abv
+  a := 1 + 2;
+  return a
 }
