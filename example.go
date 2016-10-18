@@ -1,15 +1,8 @@
-{
-  x := 1;
-  y := true;
-  ch := newChannel;
+func s(a int, b int) int {
+	return a + b
+}
 
-  go {  while y {
-           ch <- 1
-        }
-     };
-
-  while y {
-    <-ch
-  };
- x = x + 1
+{ 
+  a := 1 + 2;
+  return a
 }
