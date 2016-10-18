@@ -125,7 +125,7 @@ Recall that we can redeclare variables in some nested scope.
 
 Hence, update will override any earlier binding for v.
 
-1. let rec update v t = func (env) -> (List.find (fun (v2, t1) -> v2 = v1) env)
+1. let update v t = func (env) -> (List.find (fun (v2, t1) -> v2 = v1) env)
 
 aka ->
 
