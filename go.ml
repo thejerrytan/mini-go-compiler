@@ -7,19 +7,19 @@ and types = TyInt
            | TyChan of types
            | TyFunc of (types list * types)
 
-and stmt = Seq of stmt * stmt
-          | Go of stmt
-          | Transmit of string * exp
-          | RcvStmt of string
+and stmt = Seq of stmt * stmt (* done *)
+          | Go of stmt (* done *)
+          | Transmit of string * exp (* unsure - what is Transmit? *)
+          | RcvStmt of string (* unsure - what is RcvStmt? *)
           | Decl of string * exp (* Done - update not yet implemented*)
-          | DeclChan of string
+          | DeclChan of string (* unsure - what is DeclChan? *)
           | Assign of string * exp (* Done *)
-          | While of exp * stmt
-          | ITE of exp * stmt * stmt
-          | Return of exp
-          | FuncCall of string * (exp list)
-          | Print of exp
-          | Skip
+          | While of exp * stmt (* Done *)
+          | ITE of exp * stmt * stmt (* To be done *)
+          | Return of exp (* Done *)
+          | FuncCall of string * (exp list) (* unsure - how to represent? *)
+          | Print of exp (* Done *)
+          | Skip (* Done *)
 
 and exp = And of exp * exp (* Done *)
          | Eq of exp * exp (* Done *)
@@ -29,11 +29,11 @@ and exp = And of exp * exp (* Done *)
          | Times of exp * exp (* Done *)
          | Division of exp * exp (* Done *)
          | Not of exp (* Done *)
-         | RcvExp of string (* Unsure *)
+         | RcvExp of string (* Unsure - what is RcvExp? *)
          | IConst of int (* Done *)
          | BConst of bool (* Done *)
          | Var of string (* Done *)
-         | FuncExp of string * (exp list) (* Unsure *)
+         | FuncExp of string * (exp list) (* Unsure - what are the details? *)
 
 let rec pretty_print_prog s = match s with
   | Prog(xs, y) -> String.concat " " [">>>"; pretty_print_proc_list xs; "<<<"; pretty_print_stmt y]

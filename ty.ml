@@ -30,38 +30,38 @@ let rec inferTyExp env e = match e with
   | Var v -> match (lookup v env) with
              | Some t -> Some t
              | None -> None
-  | And (v1, v2) -> match (inferTyExp env v1, inferTyExp env v2) with
+  | And (e1, e2) -> match (inferTyExp env e1, inferTyExp env e1) with
                     | (Some t1, Some t2) -> if t1 = TyBool && t2 && TyBool then Some TyBool else None
                     | _ -> None
-  | Eq (v1, v2) -> match (inferTyExp env v1, inferTyExp env v2) with
+  | Eq (e1, e2) -> match (inferTyExp env e1, inferTyExp env e1) with
                    | (Some t1, Some t2) -> if eqTy t1 t2 then Some TyBool else None
                    | _ -> None
-  | Gt (v1, v2) -> match (inferTyExp env v1, inferTyExp env v2) with
+  | Gt (e1, e2) -> match (inferTyExp env e1, inferTyExp env e1) with
                    | (Some t1, Some t2) -> if eqTy t1 t2 then Some TyBool else None
                    | _ -> None
-  | Plus (v1, v2) -> match (inferTyExp env v1, inferTyExp env v2) with
+  | Plus (e1, e2) -> match (inferTyExp env e1, inferTyExp env e1) with
                    | (Some t1, Some t2) -> if t1 = TyInt && t2 = TyInt then Some TyInt else None
                    | _ -> None
-  | Minus (v1, v2) -> match (inferTyExp env v1, inferTyExp env v2) with
+  | Minus (e1, e2) -> match (inferTyExp env e1, inferTyExp env e1) with
                    | (Some t1, Some t2) -> if t1 = TyInt && t2 = TyInt then Some TyInt else None
                    | _ -> None
-  | Times (v1, v2) -> match (inferTyExp env v1, inferTyExp env v2) with
+  | Times (e1, e2) -> match (inferTyExp env e1, inferTyExp env e1) with
                    | (Some t1, Some t2) -> if t1 = TyInt && t2 = TyInt then Some TyInt else None
                    | _ -> None
-  | Division (v1, v2) -> match (inferTyExp env v1, inferTyExp env v2) with
+  | Division (e1, e2) -> match (inferTyExp env e1, inferTyExp env e1) with
                    | (Some t1, Some t2) -> if t1 = TyInt && t2 = TyInt then Some TyInt else None
                    | _ -> None
-  | Not v -> match inferTyExp env v with
+  | Not e -> match inferTyExp env e with
              | Some t -> if t == TyBool then Some TyBool else None
              | None -> None
   | RcvExp v -> match (lookup v env) with (* unsure - what is RcvExp? *)
              | Some t -> Some t
              | None -> None
-  | FuncExp (v1, v2) -> match lookup v1 env with (* unsure whether this is the correct idea, checking
+  | FuncExp (v1, expl) -> match lookup v1 env with (* unsure whether this is the correct idea, checking
                                                     if first one is TyFunc and ensuring that the rest
                                                     is not of TyFunc since we cannot pass and return functions? *)
                         | Some t1 -> if t1 = TyFunc
-                                     then match v2 with
+                                     then match expl with
                                           | exp List l -> if List.exists TyFunc l
                                                           then None
                                                           else inferTyExp env List.nth List.length (l - 1) (* assume last line is the type of the TyFunc? *)
@@ -77,7 +77,7 @@ let rec inferTyExp env e = match e with
 
 *)
 let rec typeCheckStmt env stmt = match stmt with
-  | Assign (v,e) -> match (lookup v env) with
+  | Assign (v, e) -> match (lookup v env) with
                     | None -> None (* Unknown variable *)
                     | Some t1 -> let t2 = inferTyExp env e in
                                  match t2 with
@@ -85,10 +85,35 @@ let rec typeCheckStmt env stmt = match stmt with
                                  | Some t3 -> if eqTy t1 t3
                                               then Some env
                                               else None
-  | Decl (v,e) -> let r = inferTyExp env v in
+  | Decl (v, e) -> let r = inferTyExp env e in
                   match r with
                   | None -> None
-                  | Some t -> Some (update (v,t) env) (* update is not yet implemented *)
+                  | Some t -> Some (update (v, t) env) (* update is not yet implemented *)
+  | Return e -> match inferTyExp env e with
+                | None -> None
+                | Some t -> Some env
+  | Print e -> match inferTyExp env e with
+               | None -> None
+               | Some t -> Some env
+  | While (e, s) -> let r = inferTyExp env e in
+                  match r with
+                  | None -> None
+                  | Some t -> if t = TyBool
+                              then typeCheckStmt env
+                              else None
+  | ITE (e, s1, s2) -> let r = inferTyExp env e in
+                    match r with
+                    | None -> None
+                    | Some t -> if t = TyBool
+                                then (* if both s1 and s2 are ok in type checks, then return Some env *)
+                                else None
+  | Seq (s1, s2) -> match (typeCheckStmt env s1, typeCheckStmt env s2) with
+                    | (Some env1, Some env2) -> Some env2
+                    | _ -> None
+  | Go s -> match typeCheckStmt env s with
+            | Some env1 -> Some env
+            | None -> None
+  | Skip -> Some env
 
 (*
 
