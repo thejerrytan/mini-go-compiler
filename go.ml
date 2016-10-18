@@ -6,34 +6,34 @@ and types = TyInt
            | TyBool
            | TyChan of types
            | TyFunc of (types list * types)
-                                                                       
+
 and stmt = Seq of stmt * stmt
           | Go of stmt
           | Transmit of string * exp
-          | RcvStmt of string 
-          | Decl of string * exp
+          | RcvStmt of string
+          | Decl of string * exp (* Done - update not yet implemented*)
           | DeclChan of string
-          | Assign of string * exp
+          | Assign of string * exp (* Done *)
           | While of exp * stmt
           | ITE of exp * stmt * stmt
           | Return of exp
           | FuncCall of string * (exp list)
           | Print of exp
-          | Skip      
-          
-and exp = And of exp * exp
-         | Eq of exp * exp
-         | Gt of exp * exp
-         | Plus of exp * exp
-         | Minus of exp * exp
-         | Times of exp * exp
-         | Division of exp * exp
-         | Not of exp
-         | RcvExp of string
-         | IConst of int
-         | BConst of bool
-         | Var of string
-         | FuncExp of string * (exp list)
+          | Skip
+
+and exp = And of exp * exp (* Done *)
+         | Eq of exp * exp (* Done *)
+         | Gt of exp * exp (* Done *)
+         | Plus of exp * exp (* Done *)
+         | Minus of exp * exp (* Done *)
+         | Times of exp * exp (* Done *)
+         | Division of exp * exp (* Done *)
+         | Not of exp (* Done *)
+         | RcvExp of string (* Unsure *)
+         | IConst of int (* Done *)
+         | BConst of bool (* Done *)
+         | Var of string (* Done *)
+         | FuncExp of string * (exp list) (* Unsure *)
 
 let rec pretty_print_prog s = match s with
   | Prog(xs, y) -> String.concat " " [">>>"; pretty_print_proc_list xs; "<<<"; pretty_print_stmt y]
@@ -50,7 +50,7 @@ and pretty_print_type s = match s with
 and pretty_print_type_list s = match s with
   | [] -> ""
   | hd::tl -> String.concat "; " ["["; pretty_print_type hd; pretty_print_type_list tl; "]"]
-and pretty_print_stmt s = match s with 
+and pretty_print_stmt s = match s with
   | Seq(x,y) -> String.concat " " [pretty_print_stmt x; pretty_print_stmt y]
   | Go(x)    -> String.concat " " ["{"; pretty_print_stmt x; "}"]
   | Transmit(x, y) -> String.concat " " [x; "<-"; pretty_print_exp y]
@@ -83,7 +83,7 @@ and pretty_print_exp_list s = match s with
   | hd::tl -> String.concat "; " ["["; pretty_print_exp hd; pretty_print_exp_list tl; "]"]
 and print_type_option r = match r with
   | Some(x)-> "Some(" ^ pretty_print_type x ^ ")"
-  | None -> "None" 
+  | None -> "None"
 and pretty_print_exp_type_list r = match r with
   | [] -> ""
   | (e, t)::tl -> String.concat "; " ["["; "("; pretty_print_exp e; ", "; pretty_print_type t; ")"; pretty_print_exp_type_list tl; "]"]

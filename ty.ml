@@ -1,4 +1,4 @@
-open Ast
+open go
 
 (* equality among types *)
 let rec eqTy t1 t2 = match (t1,t2) with
@@ -27,12 +27,47 @@ let lookup el lst = try (Some (snd (List.find (fun (el2,_) -> el = el2) lst))) w
 let rec inferTyExp env e = match e with
   | IConst i -> Some TyInt
   | BConst b -> Some TyBool
-  | CConst c -> Some TyChan
-  | FConst f -> Some TyFunc
-  | _ -> None
-
-  (* anymore remaining cases? *)
-  (* add remaining cases *)
+  | Var v -> match (lookup v env) with
+             | Some t -> Some t
+             | None -> None
+  | And (v1, v2) -> match (inferTyExp env v1, inferTyExp env v2) with
+                    | (Some t1, Some t2) -> if t1 = TyBool && t2 && TyBool then Some TyBool else None
+                    | _ -> None
+  | Eq (v1, v2) -> match (inferTyExp env v1, inferTyExp env v2) with
+                   | (Some t1, Some t2) -> if eqTy t1 t2 then Some TyBool else None
+                   | _ -> None
+  | Gt (v1, v2) -> match (inferTyExp env v1, inferTyExp env v2) with
+                   | (Some t1, Some t2) -> if eqTy t1 t2 then Some TyBool else None
+                   | _ -> None
+  | Plus (v1, v2) -> match (inferTyExp env v1, inferTyExp env v2) with
+                   | (Some t1, Some t2) -> if t1 = TyInt && t2 = TyInt then Some TyInt else None
+                   | _ -> None
+  | Minus (v1, v2) -> match (inferTyExp env v1, inferTyExp env v2) with
+                   | (Some t1, Some t2) -> if t1 = TyInt && t2 = TyInt then Some TyInt else None
+                   | _ -> None
+  | Times (v1, v2) -> match (inferTyExp env v1, inferTyExp env v2) with
+                   | (Some t1, Some t2) -> if t1 = TyInt && t2 = TyInt then Some TyInt else None
+                   | _ -> None
+  | Division (v1, v2) -> match (inferTyExp env v1, inferTyExp env v2) with
+                   | (Some t1, Some t2) -> if t1 = TyInt && t2 = TyInt then Some TyInt else None
+                   | _ -> None
+  | Not v -> match inferTyExp env v with
+             | Some t -> if t == TyBool then Some TyBool else None
+             | None -> None
+  | RcvExp v -> match (lookup v env) with (* unsure - what is RcvExp? *)
+             | Some t -> Some t
+             | None -> None
+  | FuncExp (v1, v2) -> match lookup v1 env with (* unsure whether this is the correct idea, checking
+                                                    if first one is TyFunc and ensuring that the rest
+                                                    is not of TyFunc since we cannot pass and return functions? *)
+                        | Some t1 -> if t1 = TyFunc
+                                     then match v2 with
+                                          | exp List l -> if List.exists TyFunc l
+                                                          then None
+                                                          else inferTyExp env List.nth List.length (l - 1) (* assume last line is the type of the TyFunc? *)
+                                          | _ -> None
+                                     else None
+                        | None -> None
 
 (* Implementation of G | (stmt : Cmd | G) where we simply skip Cmd and as above
   use 'option' to report failure
@@ -53,17 +88,25 @@ let rec typeCheckStmt env stmt = match stmt with
   | Decl (v,e) -> let r = inferTyExp env v in
                   match r with
                   | None -> None
-                  | Some t -> Some (update (v,t) env)
+                  | Some t -> Some (update (v,t) env) (* update is not yet implemented *)
 
 (*
 
-We assume some update function to extend the type binding.
+1. We also have to take care of the error case which is only implicit in the above typing rule.
+
+2. We assume some update function to extend the type binding.
 
 Recall that we can redeclare variables in some nested scope.
 
 Hence, update will override any earlier binding for v.
 
-let rec update v t = func (env) -> (List.find (fun (v2, t1) -> v2 = v1) env)
+1. let rec update v t = func (env) -> (List.find (fun (v2, t1) -> v2 = v1) env)
+
+aka ->
+
+() ++ (x : int)         = (x : int)
+
+(x : int) ++ (x : bool) = (x : bool)
 
 *)
 
