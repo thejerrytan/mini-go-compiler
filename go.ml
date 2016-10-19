@@ -49,12 +49,12 @@ let rec print_exp d s = match s with
   | Minus(x,y) -> linify [(indent d) ^ "Minus"; print_exp (d + 1) x; print_exp (d + 1) y]
   | Times(x,y) -> linify [(indent d) ^ "Times"; print_exp (d + 1) x; print_exp (d + 1) y]
   | Division(x,y) -> linify [(indent d) ^ "Division"; print_exp (d + 1) x; print_exp (d + 1) y]
-  | Not(x) -> linify [(indent d) ^ "Not"; print_exp (d + 1) x]
-  | RcvExp(x) -> linify [(indent d) ^ "RcvExp"; print_string (d + 1) x]
-  | IConst(x) -> linify [(indent d) ^ "IConst"; print_string (d + 1) (string_of_int x)]
-  | BConst(x) -> linify [(indent d) ^ "BConst"; print_string (d + 1) (string_of_bool x)]
-  | Var(x) -> linify [(indent d) ^ "Var"; print_string (d + 1) x]
   | FuncExp(x, ys) -> linify [(indent d) ^ "FuncExp"; print_string (d + 1) x; print_exp_list (d + 1) ys]
+  | Not(x) -> linify [(indent d) ^ "Not"; print_exp (d + 1) x]
+  | RcvExp(x) -> linify [(indent d) ^ "RcvExp " ^ x]
+  | IConst(x) -> linify [(indent d) ^ "IConst " ^ (string_of_int x)]
+  | BConst(x) -> linify [(indent d) ^ "BConst " ^ (string_of_bool x)]
+  | Var(x) -> linify [(indent d) ^ "Var " ^ x]
 and print_exp_list d s = 
   linify (((indent d) ^ "List") :: (List.map (print_exp (d + 1)) s))
 
