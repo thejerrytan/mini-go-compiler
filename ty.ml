@@ -1,6 +1,8 @@
 open go
 
-let rec eqTy t1 t2 = match (t1,t2) with
+let ( |> ) x f = f x (* pipeline function *)
+
+let rec eqTy t1 t2 = match (t1, t2) with
   | (TyInt, TyInt) -> true
   | (TyBool, TyBool) -> true
   | (TyChan t1, TyChan t2) -> eqTy t1 t2
@@ -62,17 +64,13 @@ let rec inferTyExp env e = match e with
                          then Some env
                          else None
              | None -> None
-  | FuncExp (v1, expl) -> match lookup v1 env with (* unsure whether this is the correct idea, checking
-                                                    if first one is TyFunc and ensuring that the rest
-                                                    is not of TyFunc since we cannot pass and return functions? *)
-                        | Some t1 -> if t1 = TyFunc
-                                     then match expl with
-                                          | exp List l -> if List.exists TyFunc l
-                                                          then None
-                                                          else inferTyExp env List.nth List.length (l - 1) (* assume last line is the type of the TyFunc? *)
+  | FuncExp (v, expl) -> match lookup v env with
+                         | Some t -> if t = TyFunc
+                                     then match expl |> List.map (fun e -> inferTyExp env e) |> List.filter (fun ty -> ty <> TyBool || ty <> TyInt) |> List.length with
+                                          | 0 -> Some TyFunc (* To be confirmed, we might need to return the return type of the function *)
                                           | _ -> None
                                      else None
-                        | None -> None
+                         | None -> None
 
 let rec typeCheckStmt env stmt = match stmt with
   | Assign (v, e) -> match (lookup v env) with
@@ -97,7 +95,9 @@ let rec typeCheckStmt env stmt = match stmt with
                   match r with
                   | None -> None
                   | Some t -> if t = TyBool
-                              then typeCheckStmt env
+                              then match typeCheckStmt env s with
+                                   | (Some env1) -> Some env
+                                   | None -> None
                               else None
   | ITE (e, s1, s2) -> let r = inferTyExp env e in
                     match r with
@@ -132,9 +132,24 @@ let rec typeCheckStmt env stmt = match stmt with
                               then Some env
                               else None
                   | None -> None
+  | FuncCall (v, expl) -> match lookup v env with
+                          | Some t -> if t = TyFunc
+                                      then match expl |> List.map (fun e -> inferTyExp env e) |> List.filter (fun ty -> ty <> TyBool || ty <> TyInt) |> List.length with
+                                           | 0 -> Some TyFunc (* To be confirmed, we might need to return the return type of the function *)
+                                           | _ -> None
+                                      else None
+                          | None -> None
   | Skip -> Some env
 
 let update vt env = vt :: (List.filter (fun (v1, t1) -> v1 <> fst vt) env)
+
+let rec typeCheckProc env proc = match proc with
+  | (v, etl, ot, s) -> (* To be implemented *)
+
+let rec typeCheckProg env prog = match prog with (* To be implemented: if the procedure is not None, we should augment the environment *)
+  | (procl, s) -> match (procl |> List.map (fun proc -> typeCheckProc env proc) |> List.filter (fun ty -> ty = None) |> List.length, typeCheckStmt env s) with
+                  | (0, Some t) -> Some env
+                  | _ -> None
 
 (*
 
@@ -143,7 +158,5 @@ What's still missing are implementations for
 (1) collection of type signatures from functions (procedures)
 
 (2) type checking of procedure bodies, and
-
-(3) type checking of the main program.
 
  *)
