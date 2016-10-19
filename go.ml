@@ -35,55 +35,67 @@ and exp = And of exp * exp (* Done *)
          | Var of string (* Done *)
          | FuncExp of string * (exp list) (* To be discussed *)
 
-let rec pretty_print_prog s = match s with
-  | Prog(xs, y) -> String.concat " " [">>>"; pretty_print_proc_list xs; "<<<"; pretty_print_stmt y]
-and pretty_print_proc s = match s with
-  | Proc(x, ys, z, s) -> String.concat " " ["func"; pretty_print_exp_type_list ys; print_type_option z; "{"; pretty_print_stmt s; "}"]
-and pretty_print_proc_list s = match s with
-  | [] -> ""
-  | hd::tl -> String.concat "; " ["["; pretty_print_proc hd; pretty_print_proc_list tl; "]"]
-and pretty_print_type s = match s with
-  | TyInt   -> "Int"
-  | TyBool  -> "Bool"
-  | TyChan t -> String.concat " " ["Chan("; pretty_print_type t; ")"]
-  | TyFunc (ts, t) -> String.concat " " ["Func("; pretty_print_type_list ts; ") -> "; pretty_print_type t]
-and pretty_print_type_list s = match s with
-  | [] -> ""
-  | hd::tl -> String.concat "; " ["["; pretty_print_type hd; pretty_print_type_list tl; "]"]
-and pretty_print_stmt s = match s with
-  | Seq(x,y) -> String.concat " " [pretty_print_stmt x; pretty_print_stmt y]
-  | Go(x)    -> String.concat " " ["{"; pretty_print_stmt x; "}"]
-  | Transmit(x, y) -> String.concat " " [x; "<-"; pretty_print_exp y]
-  | RcvStmt(x) -> x
-  | Decl(x,y) -> String.concat " " [x; ":="; pretty_print_exp y]
-  | DeclChan(x) -> x
-  | Assign(x,y) -> String.concat " " [x; "="; pretty_print_exp y]
-  | While(x, y) -> String.concat " " ["While"; pretty_print_exp x; "{"; pretty_print_stmt y; "}"]
-  | ITE(x,y,z) -> String.concat " " ["if"; pretty_print_exp x; "{"; pretty_print_stmt y; "} else {"; pretty_print_stmt z; "}"]
-  | Return(x) -> String.concat " " ["return"; pretty_print_exp x]
-  | FuncCall(x, ys) -> String.concat " " [x; "("; pretty_print_exp_list ys; ")"]
-  | Print(x) -> String.concat " " ["print"; pretty_print_exp x]
-  | Skip -> "Skip"
-and pretty_print_exp s = match s with
-  | And(x,y) -> String.concat " " [pretty_print_exp x; "&&"; pretty_print_exp y]
-  | Eq(x,y) -> String.concat " " [pretty_print_exp x; "=="; pretty_print_exp y]
-  | Gt(x,y) -> String.concat " " [pretty_print_exp x; ">"; pretty_print_exp y]
-  | Plus(x,y) -> String.concat " " [pretty_print_exp x; "+"; pretty_print_exp y]
-  | Minus(x,y) -> String.concat " " [pretty_print_exp x; "-"; pretty_print_exp y]
-  | Times(x,y) -> String.concat " " [pretty_print_exp x; "*"; pretty_print_exp y]
-  | Division(x,y) -> String.concat " " [pretty_print_exp x; "/"; pretty_print_exp y]
-  | Not(x) -> String.concat " " ["!"; pretty_print_exp x]
-  | RcvExp(x) -> x
-  | IConst(x) -> string_of_int(x)
-  | BConst(x) -> string_of_bool(x)
-  | Var(x) -> x
-  | FuncExp(x, ys) -> String.concat " " [x; pretty_print_exp_list ys]
-and pretty_print_exp_list s = match s with
-  | [] -> ""
-  | hd::tl -> String.concat "; " ["["; pretty_print_exp hd; pretty_print_exp_list tl; "]"]
-and print_type_option r = match r with
-  | Some(x)-> "Some(" ^ pretty_print_type x ^ ")"
-  | None -> "None"
-and pretty_print_exp_type_list r = match r with
-  | [] -> ""
-  | (e, t)::tl -> String.concat "; " ["["; "("; pretty_print_exp e; ", "; pretty_print_type t; ")"; pretty_print_exp_type_list tl; "]"]
+let indent d = (if d <= 1 then "" else (String.make (3 * (d - 1)) ' ')) ^ (if d > 0 then " | " else "")
+
+let print_string d s = (indent d) ^ s
+
+let linify xs = String.concat "\n" xs
+
+let rec pretty_print_exp d s = match s with
+  | And(x,y) -> linify [(indent d) ^ "And"; pretty_print_exp (d + 1) x; pretty_print_exp (d + 1) y]
+  | Eq(x,y) -> linify [(indent d) ^ "Eq"; pretty_print_exp (d + 1) x; pretty_print_exp (d + 1) y]
+  | Gt(x,y) -> linify [(indent d) ^ "Gt"; pretty_print_exp (d + 1) x; pretty_print_exp (d + 1) y]
+  | Plus(x,y) -> linify [(indent d) ^ "Plus"; pretty_print_exp (d + 1) x; pretty_print_exp (d + 1) y]
+  | Minus(x,y) -> linify [(indent d) ^ "Minus"; pretty_print_exp (d + 1) x; pretty_print_exp (d + 1) y]
+  | Times(x,y) -> linify [(indent d) ^ "Times"; pretty_print_exp (d + 1) x; pretty_print_exp (d + 1) y]
+  | Division(x,y) -> linify [(indent d) ^ "Division"; pretty_print_exp (d + 1) x; pretty_print_exp (d + 1) y]
+  | Not(x) -> linify [(indent d) ^ "Not"; pretty_print_exp (d + 1) x]
+  | RcvExp(x) -> linify [(indent d) ^ "RcvExp"; print_string (d + 1) x]
+  | IConst(x) -> linify [(indent d) ^ "IConst"; print_string (d + 1) (string_of_int x)]
+  | BConst(x) -> linify [(indent d) ^ "BConst"; print_string (d + 1) (string_of_bool x)]
+  | Var(x) -> linify [(indent d) ^ "Var"; print_string (d + 1) x]
+  | FuncExp(x, ys) -> linify [(indent d) ^ "FuncExp"; print_string (d + 1) x; pretty_print_exp_list (d + 1) ys]
+and pretty_print_exp_list d s = 
+  linify (((indent d) ^ "List") :: (List.map (pretty_print_exp (d + 1)) s))
+
+let rec pretty_print_type d s = match s with
+  | TyInt   -> (indent d) ^ "TyInt"
+  | TyBool  -> (indent d) ^ "TyBool"
+  | TyChan t -> linify [(indent d) ^ "TyChan"; pretty_print_type (d + 1) t;]
+  | TyFunc (ts, t) -> linify [(indent d) ^ "TyFunc"; pretty_print_type_list (d + 1) ts; pretty_print_type (d + 1) t]
+and pretty_print_type_list d s = 
+  linify (((indent d) ^ "List") :: (List.map (pretty_print_type (d + 1)) s))
+
+let print_type_option d s = match s with
+  | Some(x)-> linify [(indent d) ^ "Some"; pretty_print_type (d + 1) x]
+  | None -> (indent d) ^ "None"
+
+let pretty_print_exp_type d s =
+  linify [(indent d) ^ "Tuple"; pretty_print_exp (d + 1) (fst s); pretty_print_type (d + 1) (snd s)]
+
+let pretty_print_exp_type_list d s =
+  linify (((indent d) ^ "List") :: (List.map (pretty_print_exp_type (d + 1)) s))
+
+let rec pretty_print_stmt d s = match s with
+  | Seq(x,y) -> linify [(indent d) ^ "Seq"; pretty_print_stmt (d + 1) x; pretty_print_stmt (d + 1) y]
+  | Go(x)    -> linify [(indent d) ^ "Go"; pretty_print_stmt (d + 1) x]
+  | Transmit(x, y) -> linify [(indent d) ^ "Transmit"; print_string (d + 1) x; pretty_print_exp (d + 1) y]
+  | RcvStmt(x) -> linify [(indent d) ^ "RcvStmt"; print_string (d + 1) x]
+  | Decl(x,y) -> linify [(indent d) ^ "Decl"; print_string (d + 1) x; pretty_print_exp (d + 1) y]
+  | DeclChan(x) -> linify [(indent d) ^ "DeclChan"; print_string (d + 1) x]
+  | Assign(x,y) -> linify [(indent d) ^ "Assign"; print_string (d + 1) x; pretty_print_exp (d + 1) y]
+  | While(x, y) -> linify [(indent d) ^ "While"; pretty_print_exp (d + 1) x; pretty_print_stmt (d + 1) y]
+  | ITE(x,y,z) -> linify ["ITE"; pretty_print_exp (d + 1) x; pretty_print_stmt (d + 1) y; pretty_print_stmt (d + 1) z]
+  | Return(x) -> linify ["Return"; pretty_print_exp (d + 1) x]
+  | FuncCall(x, ys) -> linify [(indent d) ^ "FuncCall"; print_string (d + 1) x; pretty_print_exp_list (d + 1) ys]
+  | Print(x) -> linify [(indent d) ^ "Print"; pretty_print_exp (d + 1) x]
+  | Skip -> (indent d) ^ "Skip"
+
+let pretty_print_proc d s = match s with
+  | Proc(x, ys, z, s) -> linify [(indent d) ^ "Proc"; print_string (d + 1) x; pretty_print_exp_type_list (d + 1) ys; print_type_option (d + 1) z; pretty_print_stmt (d + 1) s]
+
+let pretty_print_proc_list d s = 
+  linify (((indent d) ^ "List") :: (List.map (pretty_print_proc (d + 1)) s))
+
+let rec pretty_print_prog d s = match s with
+  | Prog(xs, y) -> linify [(indent d) ^ "Prog"; pretty_print_proc_list (d + 1) xs; pretty_print_stmt (d + 1) y]
