@@ -35,7 +35,15 @@ and exp = And of exp * exp (* Done *)
          | Var of string (* Done *)
          | FuncExp of string * (exp list) (* Done *)
 
-let indent d = (if d <= 1 then "" else (String.make (3 * (d - 1)) ' ')) ^ (if d > 0 then " | " else "")
+let string_repeat s n =
+  let len = Bytes.length s in
+  let res = Bytes.create(n * len) in
+  for i = 0 to pred n do
+    Bytes.blit s 0 res (i * len) len
+  done;
+  Bytes.to_string res
+
+let indent d = (if d > 0 then ((string_repeat "|   " (d - 1)) ^ "├── ") else "")
 
 let print_string d s = (indent d) ^ s
 
