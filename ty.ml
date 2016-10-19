@@ -134,7 +134,7 @@ let rec typeCheckStmt env stmt = match stmt with
                   | None -> None
   | Skip -> Some env
 
-let update vt env = vt :: (List.filter (fun (v1, t1) -> v1 <> v) env)
+let update vt env = vt :: (List.filter (fun (v1, t1) -> v1 <> fst vt) env)
 
 (*
 
