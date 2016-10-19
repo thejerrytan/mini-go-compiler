@@ -4,3 +4,5 @@ lexer.mll
 
 *.cmo
 *.cmi
+calc
+

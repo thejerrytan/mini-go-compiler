@@ -85,8 +85,8 @@ let rec print_stmt d s = match s with
   | DeclChan(x) -> linify [(indent d) ^ "DeclChan"; print_string (d + 1) x]
   | Assign(x,y) -> linify [(indent d) ^ "Assign"; print_string (d + 1) x; print_exp (d + 1) y]
   | While(x, y) -> linify [(indent d) ^ "While"; print_exp (d + 1) x; print_stmt (d + 1) y]
-  | ITE(x,y,z) -> linify ["ITE"; print_exp (d + 1) x; print_stmt (d + 1) y; print_stmt (d + 1) z]
-  | Return(x) -> linify ["Return"; print_exp (d + 1) x]
+  | ITE(x,y,z) -> linify [(indent d) ^ "ITE"; print_exp (d + 1) x; print_stmt (d + 1) y; print_stmt (d + 1) z]
+  | Return(x) -> linify [(indent d) ^ "Return"; print_exp (d + 1) x]
   | FuncCall(x, ys) -> linify [(indent d) ^ "FuncCall"; print_string (d + 1) x; print_exp_list (d + 1) ys]
   | Print(x) -> linify [(indent d) ^ "Print"; print_exp (d + 1) x]
   | Skip -> (indent d) ^ "Skip"
