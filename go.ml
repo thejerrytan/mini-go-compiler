@@ -1,14 +1,14 @@
-type prog = Prog of (proc list) * stmt
+type prog = Prog of (proc list) * stmt (* Done *)
 
-and proc = Proc of string * ((exp * types) list) * (types option) * stmt
+and proc = Proc of string * ((exp * types) list) * (types option) * stmt (* To be implemented *)
 
-and types = TyInt
-           | TyBool
-           | TyChan of types
-           | TyFunc of (types list * types)
+and types = TyInt (* OK *)
+           | TyBool (* OK *)
+           | TyChan of types (* OK *)
+           | TyFunc of (types list * types) (* OK *)
 
-and stmt = Seq of stmt * stmt (* done *)
-          | Go of stmt (* done *)
+and stmt = Seq of stmt * stmt (* Done *)
+          | Go of stmt (* Done *)
           | Transmit of string * exp (* Done *)
           | RcvStmt of string (* Done *)
           | Decl of string * exp (* Done *)
@@ -17,7 +17,7 @@ and stmt = Seq of stmt * stmt (* done *)
           | While of exp * stmt (* Done *)
           | ITE of exp * stmt * stmt (* Done *)
           | Return of exp (* Done *)
-          | FuncCall of string * (exp list) (* To be discussed *)
+          | FuncCall of string * (exp list) (* Done *)
           | Print of exp (* Done *)
           | Skip (* Done *)
 
@@ -33,7 +33,7 @@ and exp = And of exp * exp (* Done *)
          | IConst of int (* Done *)
          | BConst of bool (* Done *)
          | Var of string (* Done *)
-         | FuncExp of string * (exp list) (* To be discussed *)
+         | FuncExp of string * (exp list) (* Done *)
 
 let indent d = (if d <= 1 then "" else (String.make (3 * (d - 1)) ' ')) ^ (if d > 0 then " | " else "")
 
