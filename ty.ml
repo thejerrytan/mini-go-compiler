@@ -1,5 +1,7 @@
 open go
 
+(* General question - When do we update the environment during the type checking process? *)
+
 let ( |> ) x f = f x (* pipeline function *)
 
 let rec eqTy t1 t2 = match (t1, t2) with
@@ -144,19 +146,22 @@ let rec typeCheckStmt env stmt = match stmt with
 let update vt env = vt :: (List.filter (fun (v1, t1) -> v1 <> fst vt) env)
 
 let rec typeCheckProc env proc = match proc with
-  | (v, etl, ot, s) -> (* To be implemented *)
+  | (v, etl, ot, s) -> match lookup env v with
+                       | Some t -> if t = TyFunc (* This looks a little dubious, we seem to need to drop the expressions? *)
+                                   then match etl |> List.map (fun (e, ty) -> ty) |> List.filter (fun ty -> ty <> TyBool || ty <> TyInt) |> List.length with
+                                        | 0 -> match ot with
+                                               | Some t -> match typeCheckStmt env s with
+                                                           | (* stmt has no return(s) *) -> None
+                                                           | (* stmt has return(s) *) -> (* make sure all return stmt are of type t -> Some env else -> none*)
+                                               | None -> match typeCheckStmt env s with
+                                                         | (* stmt has no return(s) *) -> Some env
+                                                         | (* stmt has return(s) *) -> (* make sure all return stmt are of same type -> Some env else -> None *)
+                                        | _ -> None
+                                   else None
+                       | None -> None
+  | _ -> None
 
 let rec typeCheckProg env prog = match prog with (* To be implemented: if the procedure is not None, we should augment the environment *)
   | (procl, s) -> match (procl |> List.map (fun proc -> typeCheckProc env proc) |> List.filter (fun ty -> ty = None) |> List.length, typeCheckStmt env s) with
                   | (0, Some t) -> Some env
                   | _ -> None
-
-(*
-
-What's still missing are implementations for
-
-(1) collection of type signatures from functions (procedures)
-
-(2) type checking of procedure bodies, and
-
- *)
