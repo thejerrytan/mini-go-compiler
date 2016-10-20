@@ -87,7 +87,7 @@ arg:
 ;
 ints:
     DIGIT                         { IConst (int_of_string (String.make 1 $1)) }
-    | ints DIGIT                  { IConst ((match $1 with IConst(y) -> y | _ -> 0) + int_of_string (String.make 1 $2)) }
+    | ints DIGIT                  { IConst (int_of_string ((match $1 with IConst(y) -> string_of_int y | _ -> string_of_int 0) ^ (String.make 1 $2))) }
 ;
 bools:
     TRUE                          { BConst (true) }
