@@ -16,6 +16,11 @@ let next_line lexbuf =
 }
 let white   = [' ' '\t']+
 let newline = '\r' | '\n' | "\r\n"
+let letter = ['a'-'z']
+let digit = ['0'-'9']
+let name = letter+
+let vars = letter | letter(letter|digit)+
+let ints = ['0'-'9']+
 
 rule token = parse
     white          { token lexbuf }     (* skip blanks *)
@@ -33,8 +38,9 @@ rule token = parse
   | "int"          { INT_TYPE }
   | "bool"         { BOOL_TYPE }
   | "chan int"     { CHANNEL_TYPE }
-  | ['a'-'z']      { LETTER ((Lexing.lexeme lexbuf).[0]) }
-  | ['0'-'9']      { DIGIT ((Lexing.lexeme lexbuf).[0]) }
+  | ints as lxm    { INTS (lxm) }
+  | name as lxm    { NAME (lxm) }
+  | vars as lxm    { VARS (lxm) }
   | '+'            { PLUS }
   | '-'            { MINUS }
   | '/'            { DIVIDE }

@@ -4,6 +4,7 @@ func s(a int, b int) int {
 
 { 
   a := 1 + 2 + s(99, 777);
+  b = 1 + 2 * sum(1, a);
 
   return a
 }
