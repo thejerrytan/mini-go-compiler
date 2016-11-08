@@ -1,4 +1,4 @@
-open go
+open Go
 
 (* General question - When do we update the environment during the type checking process? *)
 
@@ -11,6 +11,7 @@ let rec eqTy t1 t2 = match (t1, t2) with
   | (TyFunc (ts1, t1), TyFunc (ts2, t2)) -> eqTy t1 t2 &&
                                             (List.length ts1 == List.length ts2) &&
                                             (List.for_all (fun (t1,t2) -> eqTy t1 t2) (List.combine ts1 ts2))
+  | (_, _) -> false
 
 let lookup el lst = try (Some (snd (List.find (fun (el2,_) -> el = el2) lst))) with
                     | Not_found -> None
@@ -151,11 +152,11 @@ let rec typeCheckProc env proc = match proc with
                                    then match etl |> List.map (fun (e, ty) -> ty) |> List.filter (fun ty -> ty <> TyBool || ty <> TyInt) |> List.length with
                                         | 0 -> match ot with
                                                | Some t -> match typeCheckStmt env s with
-                                                           | (* stmt has no return(s) *) -> None
-                                                           | (* stmt has return(s) *) -> (* make sure all return stmt are of type t -> Some env else -> none*)
+                                                           | None (* stmt has no return(s) *) -> None
+                                                           | Some u(* stmt has return(s) *) -> Some u (* make sure all return stmt are of type t -> Some env else -> none*)
                                                | None -> match typeCheckStmt env s with
-                                                         | (* stmt has no return(s) *) -> Some env
-                                                         | (* stmt has return(s) *) -> (* make sure all return stmt are of same type -> Some env else -> None *)
+                                                         | None (* stmt has no return(s) *) -> Some env
+                                                         | Some u(* stmt has return(s) *) -> Some u (* make sure all return stmt are of same type -> Some env else -> None *)
                                         | _ -> None
                                    else None
                        | None -> None
