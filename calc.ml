@@ -39,8 +39,8 @@ let compiler src = match (parser src) with
 
 (* Testing *)
 let parserTests = [
-	(* "./tests/ex1.go" *)
-	(* "./tests/ex2.go" *)
+	"./tests/ex1.go";
+	"./tests/ex2.go";
 	"./tests/ex3.go"
 ]
 
