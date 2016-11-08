@@ -15,6 +15,7 @@ let digit = ['0'-'9']
 let name = letter+
 let vars = letter | letter(letter|digit)+
 let ints = ['0'-'9']+
+let comments = "(*"[^'(' '*' ')']*"*)"newline
 
 rule token = parse
     white          { token lexbuf }     (* skip blanks *)
@@ -47,11 +48,11 @@ rule token = parse
   | '>'            { RANGLE }
   | '<'            { LANGLE }
   | '!'            { EXCLAIM }
-  | '-'            { DASH }
   | ','            { COMMA }
   | '('            { LPAREN }
   | ')'            { RPAREN }
   | '{'            { LBRACE }
   | '}'            { RBRACE }
+  | comments       { token lexbuf }
   | _              { raise (SyntaxError ("Unexpected char:" ^ Lexing.lexeme lexbuf)) }
   | eof            { raise Eof }

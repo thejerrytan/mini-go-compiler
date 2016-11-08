@@ -6,7 +6,7 @@
 %token <string> INTS, VARS, NAME
 %token PLUS MINUS DIVIDE TIMES
 %token EQUAL AMP BAR COLON SEMICOLON RANGLE LANGLE
-%token EXCLAIM DASH COMMA LPAREN RPAREN LBRACE RBRACE
+%token EXCLAIM COMMA LPAREN RPAREN LBRACE RBRACE
 %token GO IF ELSE RETURN WHILE
 %token PRINT NEWCHANNEL FUNC INT_TYPE BOOL_TYPE CHANNEL_TYPE
 %token EOL EOF
@@ -39,9 +39,10 @@ block:
 statement:
     statement SEMICOLON statement         { Seq ($1, $3) }
   | GO block                              { Go ($2) }
-  | VARS LANGLE DASH aexp               { Transmit ($1, $4) }
-  | NAME LANGLE DASH aexp               { Transmit ($1, $4) }
-  | LANGLE DASH VARS                    { RcvStmt $3 }
+  | VARS LANGLE MINUS aexp               { Transmit ($1, $4) }
+  | NAME LANGLE MINUS aexp               { Transmit ($1, $4) }
+  | LANGLE MINUS VARS                    { RcvStmt $3 }
+  | LANGLE MINUS NAME                    { RcvStmt $3 }
   | VARS COLON EQUAL bexp               { Decl ($1, $4) }
   | NAME COLON EQUAL bexp               { Decl ($1, $4) }
   | VARS COLON EQUAL NEWCHANNEL         { DeclChan ($1) }
@@ -82,7 +83,8 @@ factor:
     | bools                       { $1 }
     | VARS                        { Var ($1) }
     | NAME                        { Var ($1) }
-    | LANGLE DASH VARS          { RcvExp ($3) }
+    | LANGLE MINUS VARS            { RcvExp ($3) }
+    | LANGLE MINUS NAME            { RcvExp ($3) }
     | EXCLAIM factor              { Not ($2) }
     | LPAREN bexp RPAREN          { $2 }
     | NAME LPAREN arg RPAREN      { FuncExp ($1, $3) }

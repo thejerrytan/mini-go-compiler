@@ -37,9 +37,27 @@ let compiler src = match (parser src) with
                           | None -> None
                           | Some i -> codeGen i
 
-let _ =
-  let result = match (parser "./example.go") with
-  | Some ast -> ast
-  | None -> Go.Prog ([], Skip)
-  in Printf.printf "%s" (print_prog 0 result); print_newline(); flush stdout
+(* Testing *)
+let parserTests = [
+	(* "./tests/ex1.go" *)
+	(* "./tests/ex2.go" *)
+	"./tests/ex3.go"
+]
 
+(* Returns filename and AST tuple, given filename *)
+let parseAst src = 
+  match (parser src) with
+  | Some ast -> (src, ast)
+  | None -> (src, Go.Prog ([], Skip))
+
+(* Print filename followed by AST *)
+let printAst (src, ast) =
+	Printf.printf "%s" (src); print_newline(); flush stdout;
+	Printf.printf "%s" (print_prog 0 ast); print_newline(); flush stdout
+
+(* Loops through all files and prints out AST *)
+let testParser = 
+  let parserAstList = List.map parseAst parserTests in
+  	List.map printAst parserAstList
+
+let _ = testParser
