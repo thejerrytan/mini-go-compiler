@@ -3,6 +3,7 @@ open Go
 open Intermediate
 (* open Ty *)
 open Vm
+open Normalize
 
 (* Here is a rough overview of the compiler stages *)
 (* Source --Parser--> AST --TypeCheck--> AST --Intermediate--> IR --CodeGen--> VM Code *)
@@ -55,9 +56,23 @@ let printAst (src, ast) =
 	Printf.printf "%s" (src); print_newline(); flush stdout;
 	Printf.printf "%s" (print_prog 0 ast); print_newline(); flush stdout
 
+let parseNormAst src =
+  match (parser src) with
+  | Some ast -> let normAST = Normalize.normalizeProg ast in
+                normAST
+  | None -> (src, Go.Prog ([], Skip))
+
+let printNormAst src ast =
+  Printf.printf "%s" (src); print_newline(); flush stdout;
+  Printf.printf "%s" (print_prog 0 ast); print_newline(); flush stdout
+
 (* Loops through all files and prints out AST *)
 let testParser = 
   let parserAstList = List.map parseAst parserTests in
   	List.map printAst parserAstList
 
-let _ = testParser
+let testNormParser = 
+  let parserNormAstList = List.map parseNormAst parserTests in
+    List.map printNormAst parserNormAstList
+
+let _ = testNormParser

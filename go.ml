@@ -100,10 +100,12 @@ let rec print_stmt d s = match s with
   | Skip -> (indent d) ^ "Skip"
 
 let print_proc d s = match s with
+  | Proc(x, ys, z, (stmt, exp)) -> linify [(indent d) ^ "Proc"; print_string (d + 1) x; print_exp_type_list (d + 1) ys; print_type_option (d + 1) z; print_stmt (d + 1) stmt; print_exp d exp]
   | Proc(x, ys, z, s) -> linify [(indent d) ^ "Proc"; print_string (d + 1) x; print_exp_type_list (d + 1) ys; print_type_option (d + 1) z; print_stmt (d + 1) s]
 
 let print_proc_list d s = 
   linify (((indent d) ^ "List") :: (List.map (print_proc (d + 1)) s))
 
 let rec print_prog d s = match s with
+  | Prog(ps, (stmt, exp)) -> linify [(indent d) ^ "Prog"; print_proc_list (d + 1) xs; print_stmt (d + 1) stmt; print_exp d exp]
   | Prog(xs, y) -> linify [(indent d) ^ "Prog"; print_proc_list (d + 1) xs; print_stmt (d + 1) y]
