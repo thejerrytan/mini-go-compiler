@@ -40,9 +40,10 @@ let compiler src = match (parser src) with
 
 (* Testing *)
 let parserTests = [
-	"./tests/ex1.go";
-	"./tests/ex2.go";
-	"./tests/ex3.go"
+	(* "./tests/ex1.go"; *)
+	(* "./tests/ex2.go"; *)
+	(* "./tests/ex3.go" *)
+  "./tests/normalizeTest.go"
 ]
 
 (* Returns filename and AST tuple, given filename *)
@@ -58,11 +59,10 @@ let printAst (src, ast) =
 
 let parseNormAst src =
   match (parser src) with
-  | Some ast -> let normAST = Normalize.normalizeProg ast in
-                normAST
+  | Some ast -> (src, Normalize.normalizeProg ast)
   | None -> (src, Go.Prog ([], Skip))
 
-let printNormAst src ast =
+let printNormAst (src, ast) =
   Printf.printf "%s" (src); print_newline(); flush stdout;
   Printf.printf "%s" (print_prog 0 ast); print_newline(); flush stdout
 

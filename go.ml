@@ -34,6 +34,7 @@ and exp = And of exp * exp (* Done *)
          | BConst of bool (* Done *)
          | Var of string (* Done *)
          | FuncExp of string * (exp list) (* Done *)
+         (* | SkipExp *)
 
 let string_repeat s n =
   let len = Bytes.length s in
@@ -63,6 +64,8 @@ let rec print_exp d s = match s with
   | IConst(x) -> linify [(indent d) ^ "IConst " ^ (string_of_int x)]
   | BConst(x) -> linify [(indent d) ^ "BConst " ^ (string_of_bool x)]
   | Var(x) -> linify [(indent d) ^ "Var " ^ x]
+  (* | SkipExp -> linify [(indent d) ^ "SkipExp"] *)
+
 and print_exp_list d s = 
   linify (((indent d) ^ "List") :: (List.map (print_exp (d + 1)) s))
 
@@ -100,12 +103,10 @@ let rec print_stmt d s = match s with
   | Skip -> (indent d) ^ "Skip"
 
 let print_proc d s = match s with
-  | Proc(x, ys, z, (stmt, exp)) -> linify [(indent d) ^ "Proc"; print_string (d + 1) x; print_exp_type_list (d + 1) ys; print_type_option (d + 1) z; print_stmt (d + 1) stmt; print_exp d exp]
   | Proc(x, ys, z, s) -> linify [(indent d) ^ "Proc"; print_string (d + 1) x; print_exp_type_list (d + 1) ys; print_type_option (d + 1) z; print_stmt (d + 1) s]
 
 let print_proc_list d s = 
   linify (((indent d) ^ "List") :: (List.map (print_proc (d + 1)) s))
 
 let rec print_prog d s = match s with
-  | Prog(ps, (stmt, exp)) -> linify [(indent d) ^ "Prog"; print_proc_list (d + 1) xs; print_stmt (d + 1) stmt; print_exp d exp]
   | Prog(xs, y) -> linify [(indent d) ^ "Prog"; print_proc_list (d + 1) xs; print_stmt (d + 1) y]
