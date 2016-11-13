@@ -1,6 +1,6 @@
 parser.mli
 parser.ml
-lexer.mll
+lexer.ml
 
 *.cmo
 *.cmi
