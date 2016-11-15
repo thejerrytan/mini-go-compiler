@@ -40,7 +40,7 @@ func testchannel() chan int {
 
 func testchannelmul(a chan int) chan int {		(* mul letter, return chan int, 1 arg *)
 	return a
-} 
+}
 
 {
 	return 0

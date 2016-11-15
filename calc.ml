@@ -1,7 +1,7 @@
 (* File calc.ml *)
 open Go
 (* open Intermediate *)
-(* open Ty *)
+open Ty
 (* open Vm *)
 (* open Normalize *)
 
@@ -43,11 +43,17 @@ let parserTests = [
 	(* "./tests/ex1.go"; *)
 	(* "./tests/ex2.go"; *)
 	(* "./tests/ex3.go" *)
-  "./tests/normalizeTest.go"
+  (* "./tests/normalizeTest.go" *)
+  "./tests/typeCheckerDeclarationsTest.go"
+  (* "./tests/typeCheckerFunctionTest.go" *)
+  (* "./tests/typeCheckerFunctionFailureTest.go" *)
 ]
 
 let typeCheckerTests = [
   "./tests/typeCheckerDeclarationsTest.go"
+  (* "./tests/typeCheckerDeclarationsSpecialTest.go" *)
+  (* "./tests/typeCheckerFunctionTest.go" *)
+  (* "./tests/typeCheckerFunctionFailureTest.go" *)
 ]
 
 (* Returns filename and AST tuple, given filename *)
@@ -90,5 +96,5 @@ let testTypeChecker =
     List.map printNormAst parserNormAstList *)
 
 let _ = testTypeChecker
-let _ = testParser
+(* let _ = testParser *)
 (* let _ = testNormParser  *)
