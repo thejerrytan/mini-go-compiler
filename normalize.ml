@@ -46,7 +46,7 @@ let rec normalizeExp e = match e with
                           Not (snd r1))
 
   | RcvExp ch         -> let x = freshName() in
-                         (Decl (x, RcvExp ch),
+                         (Decl (Some(TyChan TyInt), x, RcvExp ch),
                           Var x)
 
   (* Introduce Skip for convenience, maybe should have
@@ -64,24 +64,24 @@ let rec normalizeExp e = match e with
                           let c  = List.fold_left (fun a -> fun b -> Seq (a,b)) Skip (List.map fst rs) in 
                           let xs = List.map snd rs in
                           let y = freshName() in
-                          (Seq (c, Decl (y, FuncExp (x,xs))),
+                          (Seq (c, Decl (None, y, FuncExp (x,xs))),
                            Var y)
 
-let rec normalizeStmt s = match s with
+let rec normalizeStmt locals s = match s with
   | Seq (s1,s2) -> Seq (normalizeStmt s1, normalizeStmt s2)
   | Go s        -> Go (normalizeStmt s)
   | Transmit (x,e) -> let r = normalizeExp e in
                       Seq (fst r, Transmit (x, snd r))
   | RcvStmt x   -> RcvStmt x   
-  | Decl (x,e)  -> let r = normalizeExp e in
-                   Seq (fst r, Decl (x, snd r))
+  | Decl (t,x,e)  -> let r = normalizeExp e in
+                   Seq (fst r, Decl (t, x, snd r))
   | DeclChan x  -> DeclChan x
   | Assign (x,e) -> let r = normalizeExp e in
                     Seq (fst r, Assign (x, snd r))
-  | While (e,s)  -> let r = normalizeExp e in
-                    Seq (fst r, While (snd r, normalizeStmt s))
-  | ITE (e,s1,s2) -> let r = normalizeExp e in
-                     Seq (fst r, ITE (snd r, normalizeStmt s1, normalizeStmt s2))
+  | While (e,(locals, s))  -> let r = normalizeExp e in
+                    Seq (fst r, While (snd r, normalizeStmt locals, s))
+  | ITE (e,(locals1, s1),(locals2, s2)) -> let r = normalizeExp e in
+                     Seq (fst r, ITE (snd r, (normalizeStmt locals1, s1), (normalizeStmt locals2 s2)))
   | Return e      -> let r = normalizeExp e in
                      Seq (fst r, Return (snd r))
   | FuncCall (x, es) -> let rs = List.map normalizeExp es in
@@ -94,7 +94,7 @@ let rec normalizeStmt s = match s with
 
 
 let normalizeProc p = match p with
-    Proc (x, args, tys, s) -> Proc (x, args, tys, normalizeStmt s)
+    Proc (x, args, tys, (locals,s)) -> Proc (x, args, tys, (normalizeStmt locals s))
 
 
 let normalizeProg p = match p with

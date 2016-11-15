@@ -1,21 +1,21 @@
 type prog = Prog of (proc list) * stmt (* Done *)
 
-and proc = Proc of string * ((exp * types) list) * (types option) * stmt (* Done *)
+and proc = Proc of string * ((exp * types) list) * (types option) * (locals * stmt) (* To be implemented *)
 
 and types = TyInt (* OK *)
            | TyBool (* OK *)
            | TyChan of types (* OK *)
-           | TyFunc of (types list * types) (* OK *)
+           | TyFunc of (types list * (types option)) (* OK *)
 
 and stmt = Seq of stmt * stmt (* Done *)
           | Go of stmt (* Done *)
           | Transmit of string * exp (* Done *)
           | RcvStmt of string (* Done *)
-          | Decl of string * exp (* Done *)
+          | Decl of (types option) * string * exp (* Done *)
           | DeclChan of string (* Done *)
           | Assign of string * exp (* Done *)
-          | While of exp * stmt (* Done *)
-          | ITE of exp * stmt * stmt (* Done *)
+          | While of exp * (locals * stmt) (* Done *)
+          | ITE of exp * (locals * stmt) * (locals * stmt) (* Done *)
           | Return of exp (* Done *)
           | FuncCall of string * (exp list) (* Done *)
           | Print of exp (* Done *)
@@ -35,6 +35,7 @@ and exp = And of exp * exp (* Done *)
          | Var of string (* Done *)
          | FuncExp of string * (exp list) (* Done *)
          (* | SkipExp *)
+and locals = Locals of (string * types) list
 
 let string_repeat s n =
   let len = Bytes.length s in
@@ -73,7 +74,9 @@ let rec print_type d s = match s with
   | TyInt   -> (indent d) ^ "TyInt"
   | TyBool  -> (indent d) ^ "TyBool"
   | TyChan t -> linify [(indent d) ^ "TyChan"; print_type (d + 1) t;]
-  | TyFunc (ts, t) -> linify [(indent d) ^ "TyFunc"; print_type_list (d + 1) ts; print_type (d + 1) t]
+  | TyFunc (ts, t) -> match t with
+    | Some t -> linify [(indent d) ^ "TyFunc"; print_type_list (d + 1) ts; print_type (d + 1) t]
+    | None -> linify [(indent d) ^ "TyFunc"; print_type_list (d + 1) ts; (indent (d+1)) ^ "None"]
 and print_type_list d s =
   linify (((indent d) ^ "List") :: (List.map (print_type (d + 1)) s))
 
@@ -92,18 +95,18 @@ let rec print_stmt d s = match s with
   | Go(x)    -> linify [(indent d) ^ "Go"; print_stmt (d + 1) x]
   | Transmit(x, y) -> linify [(indent d) ^ "Transmit"; print_string (d + 1) x; print_exp (d + 1) y]
   | RcvStmt(x) -> linify [(indent d) ^ "RcvStmt"; print_string (d + 1) x]
-  | Decl(x,y) -> linify [(indent d) ^ "Decl"; print_string (d + 1) x; print_exp (d + 1) y]
+  | Decl(t,x,y) -> linify [(indent d) ^ "Decl"; print_type_option (d + 1) t; print_string (d + 1) x; print_exp (d + 1) y]
   | DeclChan(x) -> linify [(indent d) ^ "DeclChan"; print_string (d + 1) x]
   | Assign(x,y) -> linify [(indent d) ^ "Assign"; print_string (d + 1) x; print_exp (d + 1) y]
-  | While(x, y) -> linify [(indent d) ^ "While"; print_exp (d + 1) x; print_stmt (d + 1) y]
-  | ITE(x,y,z) -> linify [(indent d) ^ "ITE"; print_exp (d + 1) x; print_stmt (d + 1) y; print_stmt (d + 1) z]
+  | While(x, (locals, y)) -> linify [(indent d) ^ "While"; print_exp (d + 1) x; print_stmt (d + 1) y]
+  | ITE(x,(localy, y), (localz, z)) -> linify [(indent d) ^ "ITE"; print_exp (d + 1) x; print_stmt (d + 1) y; print_stmt (d + 1) z]
   | Return(x) -> linify [(indent d) ^ "Return"; print_exp (d + 1) x]
   | FuncCall(x, ys) -> linify [(indent d) ^ "FuncCall"; print_string (d + 1) x; print_exp_list (d + 1) ys]
   | Print(x) -> linify [(indent d) ^ "Print"; print_exp (d + 1) x]
   | Skip -> (indent d) ^ "Skip"
 
 let print_proc d s = match s with
-  | Proc(x, ys, z, s) -> linify [(indent d) ^ "Proc"; print_string (d + 1) x; print_exp_type_list (d + 1) ys; print_type_option (d + 1) z; print_stmt (d + 1) s]
+  | Proc(x, ys, z, (locals,s)) -> linify [(indent d) ^ "Proc"; print_string (d + 1) x; print_exp_type_list (d + 1) ys; print_type_option (d + 1) z; print_stmt (d + 1) s]
 
 let print_proc_list d s =
   linify (((indent d) ^ "List") :: (List.map (print_proc (d + 1)) s))
