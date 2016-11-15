@@ -4,15 +4,18 @@ open Go
 let nameSupply = ref 0
 let freshName _ =  nameSupply := !nameSupply + 1;
                    String.concat "" ["temp" ; string_of_int (!nameSupply )] 
-let lookup x locals = match List.filter (fun el -> fst el = x) locals with
-  | [xs] -> Some xs
+let rec lookup (x: string) (xs : (string * Go.types) list) = 
+  let ys = (x, TyInt)::xs in
+  match List.filter (fun el -> (fst el) = x) ys with
+  | [(n, t)] -> Some (n, t)
   | _ -> None
 
-let renameLocal locals tbl x = match lookup x locals with
-  | Some (n, t) -> let newName = freshName() in
-                    Hashtbl.add tbl x newName;
-                   (newName, t)::(List.filter (fun el -> fst el <> x) locals), tbl
-  | None -> locals, tbl
+let renameLocal locals tbl x = match locals with 
+  | Locals(xs) -> match lookup x xs with
+                  | Some (n, t) -> let newName = freshName() in
+                                    Hashtbl.add tbl x newName;
+                                    Locals((newName, t)::(List.filter (fun el -> fst el <> x) xs)), tbl
+                  | None -> locals, tbl
 
 let renameVar tbl x = try( Hashtbl.find tbl x) with Not_found -> x  (* x -> y mapping must exist first *)
 
@@ -20,44 +23,71 @@ let getFst (x,y,z) = x
 let getSnd (x,y,z) = y
 let getTrd (x,y,z) = z
 
+let rec renameExp locals tbl e = match e with
+  | Eq (e1, e2) -> let r1 = renameExp locals tbl e1 in
+                   let r2 = renameExp (getFst r1) (getSnd r1) e2 in
+                   (getFst r2, getSnd r2, Eq (getTrd r1, getTrd r2)) 
+  | And (e1, e2) -> let r1 = renameExp locals tbl e1 in
+                    let r2 = renameExp (getFst r1) (getSnd r1) e2 in
+                    (getFst r2, getSnd r2, And (getTrd r1, getTrd r2))
+  | Gt (e1, e2) -> let r1 = renameExp locals tbl e1 in
+                   let r2 = renameExp (getFst r1) (getSnd r1) e2 in
+                   (getFst r2, getSnd r2, Gt (getTrd r1, getTrd r2))
+  | Plus (e1, e2) -> let r1 = renameExp locals tbl e1 in
+                     let r2 = renameExp (getFst r1) (getSnd r1) e2 in
+                     (getFst r2, getSnd r2, Plus (getTrd r1, getTrd r2))
+  | Minus (e1, e2) -> let r1 = renameExp locals tbl e1 in
+                      let r2 = renameExp (getFst r1) (getSnd r1) e2 in
+                      (getFst r2, getSnd r2, Minus (getTrd r1, getTrd r2))
+  | Times (e1, e2) -> let r1 = renameExp locals tbl e1 in
+                      let r2 = renameExp (getFst r1) (getSnd r1) e2 in
+                      (getFst r2, getSnd r2, Times (getTrd r1, getTrd r2))
+  | Division (e1, e2) -> let r1 = renameExp locals tbl e1 in
+                         let r2 = renameExp (getFst r1) (getSnd r1) e2 in
+                         (getFst r2, getSnd r2, Division (getTrd r1, getTrd r2))
+  | Not (e1) -> let r1 = renameExp locals tbl e1 in
+                    (getFst r1, getSnd r1, Not (getTrd r1))
+  | RcvExp (e1) -> let r = renameVar tbl e1 in
+                   (locals, tbl, RcvExp(r))
+  | IConst (i) ->  locals, tbl, IConst(i)
+  | BConst (b) -> locals, tbl, BConst(b)
+  | Var (v) -> locals, tbl, Var(renameVar tbl v)
+  | FuncExp (x, es) -> let rs = List.map (renameExp locals tbl) es in
+                       (getFst (List.hd rs), getSnd (List.hd rs), FuncExp (x, List.map getTrd rs))
+
 let rec renameStmt locals tbl s = match s with
   | Seq (s1, s2) -> let (locals_s1, tbl_s1, stmt1) = renameStmt locals tbl s1 in
                     let (locals_s2, tbl_s2, stmt2) = renameStmt locals_s1 tbl_s1 s2 in
                     (locals_s2, tbl_s2, Seq(stmt1, stmt2))
   | Go (s1) -> let r = renameStmt locals tbl s1 in 
-               Go(getTrd r)
+               (getFst r, getSnd r, Go(getTrd r))
   | Transmit (s1, e1) -> let r1 = renameVar tbl s1 in
-                         let r2 = renameExp locals (fst r1) e1 in
+                         let r2 = renameExp locals tbl e1 in
                          (getFst r2, getSnd r2, Transmit(r1, getTrd r2))
   | RcvStmt (s1) -> let r = renameVar tbl s1 in
-                    (locals, tbl, RcvStmt (r)
-  | Decl (t, s1, e1) -> let r1 = renameLocal tbl s1 in
-                        let r2 = renameExp (getFst r1) (getSnd r1) e1 in
-                        (getFst r2, getSnd r2, Decl (t, renameVar (getSnd r2), getTrd r2)
+                    (locals, tbl, RcvStmt (r))
+  | Decl (t, s1, e1) -> let r1 = renameLocal locals tbl s1 in
+                        let r2 = renameExp (fst r1) (snd r1) e1 in
+                        (getFst r2, getSnd r2, Decl (t, renameVar (getSnd r2) s1, getTrd r2))
   | DeclChan (s1) -> let r1 = renameLocal locals tbl s1 in
-                      (getFst r1, getSnd r1, DeclChan(renameVar s1))
-  | Assign (s1, e1) -> let r = renameExp locals tbl e1 in
-                        (getFst r1, getSnd r1, Assign(renameVar s1, getTrd r))
+                      (fst r1, snd r1, DeclChan(renameVar (snd r1) s1))
+  | Assign (s1, e1) -> let r1 = renameExp locals tbl e1 in
+                        (getFst r1, getSnd r1, Assign(renameVar (getSnd r1) s1, getTrd r1))
   | While (e1, (locals_s1, s1)) -> let r1 = renameExp locals tbl e1 in
                                    let r2 = renameStmt locals_s1 tbl s1 in
-                                   (getFst r2, getSnd r2, While(getTrd r1, (getSnd r2, getTrd r2)))
+                                   (getFst r2, getSnd r2, While(getTrd r1, (getFst r2, getTrd r2)))
   | ITE (e1, (locals_s1, s1), (locals_s2, s2)) -> let r1 = renameExp locals tbl e1 in
                                                   let r2 = renameStmt locals_s1 (getSnd r1) s1 in
                                                   let r3 = renameStmt locals_s2 (getSnd r1) s2 in
                                                   (getFst r3, getSnd r3, ITE(getTrd r1, (getFst r2, getTrd r2), (getFst r3, getTrd r3)))
   | Return (e1) -> let r1 = renameExp locals tbl e1 in
-                   (getFst r1, getSnd r1, getTrd r1)
-  | FuncCall (s1, es) -> let r1 = renameState locals tbl s1 in
-                      -> let r2 = List.map (renameExp locals tbl) es in
-                      -> (getFst r1, tbl, FuncCall(getFst r1, List.map getTrd r2))
-  | Print (e1) -> let r1 = renameExp locals tbl el in
-                  (getFst r1, getSnd r1, getTrd r1)
-  | Skip -> Skip
+                   (getFst r1, getSnd r1, Return (getTrd r1))
+  | FuncCall (s1, es) -> let r1 = List.map (renameExp locals tbl) es in
+                         (getFst (List.hd r1), tbl, FuncCall(s1, List.map getTrd r1))
+  | Print (e1) -> let r1 = renameExp locals tbl e1 in
+                  (getFst r1, getSnd r1, Print(getTrd r1))
+  | Skip -> (locals, tbl, Skip)
 
-let rec renameExp locals tbl e = match e with
-  | Eq (e1, e2) ->
-  | And (e1, e2) ->
-  | Gt (e1, e2) ->
 
 let rec normalizeExp e = match e with
   | Eq (e1, e2)  -> let r1 = normalizeExp e1 in
@@ -133,9 +163,9 @@ let rec normalizeStmt s = match s with
   | Assign (x,e) -> let r = normalizeExp e in
                     Seq (fst r, Assign (x, snd r))
   | While (e,(locals, s))  -> let r = normalizeExp e in
-                    Seq (fst r, While (snd r, normalizeStmt s))
+                    Seq (fst r, While (snd r,(locals, normalizeStmt s)))
   | ITE (e,(locals1, s1),(locals2, s2)) -> let r = normalizeExp e in
-                     Seq (fst r, ITE (snd r, (normalizeStmt s1), (normalizeStmt s2)))
+                     Seq (fst r, ITE (snd r, (locals1, normalizeStmt s1), (locals2, normalizeStmt s2)))
   | Return e      -> let r = normalizeExp e in
                      Seq (fst r, Return (snd r))
   | FuncCall (x, es) -> let rs = List.map normalizeExp es in
@@ -148,8 +178,19 @@ let rec normalizeStmt s = match s with
 
 
 let normalizeProc p = match p with
-    Proc (x, args, tys, (locals,s)) -> Proc (x, args, tys, (normalizeStmt s))
+    Proc (x, args, tys, (locals,s)) -> Proc (x, args, tys, (locals, normalizeStmt s))
 
 
 let normalizeProg p = match p with
     Prog (ps, s) -> Prog (List.map normalizeProc ps, normalizeStmt s)
+
+let renameProc p = match p with
+    Proc (x, args, tys, (locals, s)) -> let newLocals, newTbl, newS = renameStmt locals (Hashtbl.create 10) s in
+                                        Proc(x, args, tys, (newLocals, newS))
+
+let renameProg p = match p with
+    Prog (ps, s) ->   let locals = Locals([]) in
+                      let env = Hashtbl.create 10 in
+                      let r1 = renameStmt locals env s in
+                      Prog (List.map renameProc ps, getTrd r1)
+
