@@ -4,6 +4,60 @@ open Go
 let nameSupply = ref 0
 let freshName _ =  nameSupply := !nameSupply + 1;
                    String.concat "" ["temp" ; string_of_int (!nameSupply )] 
+let lookup x locals = match List.filter (fun el -> fst el = x) locals with
+  | [xs] -> Some xs
+  | _ -> None
+
+let renameLocal locals tbl x = match lookup x locals with
+  | Some (n, t) -> let newName = freshName() in
+                    Hashtbl.add tbl x newName;
+                   (newName, t)::(List.filter (fun el -> fst el <> x) locals), tbl
+  | None -> locals, tbl
+
+let renameVar tbl x = try( Hashtbl.find tbl x) with Not_found -> x  (* x -> y mapping must exist first *)
+
+let getFst (x,y,z) = x
+let getSnd (x,y,z) = y
+let getTrd (x,y,z) = z
+
+let rec renameStmt locals tbl s = match s with
+  | Seq (s1, s2) -> let (locals_s1, tbl_s1, stmt1) = renameStmt locals tbl s1 in
+                    let (locals_s2, tbl_s2, stmt2) = renameStmt locals_s1 tbl_s1 s2 in
+                    (locals_s2, tbl_s2, Seq(stmt1, stmt2))
+  | Go (s1) -> let r = renameStmt locals tbl s1 in 
+               Go(getTrd r)
+  | Transmit (s1, e1) -> let r1 = renameVar tbl s1 in
+                         let r2 = renameExp locals (fst r1) e1 in
+                         (getFst r2, getSnd r2, Transmit(r1, getTrd r2))
+  | RcvStmt (s1) -> let r = renameVar tbl s1 in
+                    (locals, tbl, RcvStmt (r)
+  | Decl (t, s1, e1) -> let r1 = renameLocal tbl s1 in
+                        let r2 = renameExp (getFst r1) (getSnd r1) e1 in
+                        (getFst r2, getSnd r2, Decl (t, renameVar (getSnd r2), getTrd r2)
+  | DeclChan (s1) -> let r1 = renameLocal locals tbl s1 in
+                      (getFst r1, getSnd r1, DeclChan(renameVar s1))
+  | Assign (s1, e1) -> let r = renameExp locals tbl e1 in
+                        (getFst r1, getSnd r1, Assign(renameVar s1, getTrd r))
+  | While (e1, (locals_s1, s1)) -> let r1 = renameExp locals tbl e1 in
+                                   let r2 = renameStmt locals_s1 tbl s1 in
+                                   (getFst r2, getSnd r2, While(getTrd r1, (getSnd r2, getTrd r2)))
+  | ITE (e1, (locals_s1, s1), (locals_s2, s2)) -> let r1 = renameExp locals tbl e1 in
+                                                  let r2 = renameStmt locals_s1 (getSnd r1) s1 in
+                                                  let r3 = renameStmt locals_s2 (getSnd r1) s2 in
+                                                  (getFst r3, getSnd r3, ITE(getTrd r1, (getFst r2, getTrd r2), (getFst r3, getTrd r3)))
+  | Return (e1) -> let r1 = renameExp locals tbl e1 in
+                   (getFst r1, getSnd r1, getTrd r1)
+  | FuncCall (s1, es) -> let r1 = renameState locals tbl s1 in
+                      -> let r2 = List.map (renameExp locals tbl) es in
+                      -> (getFst r1, tbl, FuncCall(getFst r1, List.map getTrd r2))
+  | Print (e1) -> let r1 = renameExp locals tbl el in
+                  (getFst r1, getSnd r1, getTrd r1)
+  | Skip -> Skip
+
+let rec renameExp locals tbl e = match e with
+  | Eq (e1, e2) ->
+  | And (e1, e2) ->
+  | Gt (e1, e2) ->
 
 let rec normalizeExp e = match e with
   | Eq (e1, e2)  -> let r1 = normalizeExp e1 in
@@ -67,7 +121,7 @@ let rec normalizeExp e = match e with
                           (Seq (c, Decl (None, y, FuncExp (x,xs))),
                            Var y)
 
-let rec normalizeStmt locals s = match s with
+let rec normalizeStmt s = match s with
   | Seq (s1,s2) -> Seq (normalizeStmt s1, normalizeStmt s2)
   | Go s        -> Go (normalizeStmt s)
   | Transmit (x,e) -> let r = normalizeExp e in
@@ -79,9 +133,9 @@ let rec normalizeStmt locals s = match s with
   | Assign (x,e) -> let r = normalizeExp e in
                     Seq (fst r, Assign (x, snd r))
   | While (e,(locals, s))  -> let r = normalizeExp e in
-                    Seq (fst r, While (snd r, normalizeStmt locals, s))
+                    Seq (fst r, While (snd r, normalizeStmt s))
   | ITE (e,(locals1, s1),(locals2, s2)) -> let r = normalizeExp e in
-                     Seq (fst r, ITE (snd r, (normalizeStmt locals1, s1), (normalizeStmt locals2 s2)))
+                     Seq (fst r, ITE (snd r, (normalizeStmt s1), (normalizeStmt s2)))
   | Return e      -> let r = normalizeExp e in
                      Seq (fst r, Return (snd r))
   | FuncCall (x, es) -> let rs = List.map normalizeExp es in
@@ -94,7 +148,7 @@ let rec normalizeStmt locals s = match s with
 
 
 let normalizeProc p = match p with
-    Proc (x, args, tys, (locals,s)) -> Proc (x, args, tys, (normalizeStmt locals s))
+    Proc (x, args, tys, (locals,s)) -> Proc (x, args, tys, (normalizeStmt s))
 
 
 let normalizeProg p = match p with
