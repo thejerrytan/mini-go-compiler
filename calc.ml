@@ -8,7 +8,7 @@ open Go
 (* Here is a rough overview of the compiler stages *)
 (* Source --Parser--> AST --TypeCheck--> AST --Intermediate--> IR --CodeGen--> VM Code *)
 
-let parser src = 
+let parser src =
   let lexbuf = Lexing.from_channel (open_in src) in
   try
   	match (Parser.prog Lexer.token lexbuf) with
@@ -46,8 +46,12 @@ let parserTests = [
   "./tests/normalizeTest.go"
 ]
 
+let typeCheckerTests = [
+  "./tests/typeCheckerTest.go"
+]
+
 (* Returns filename and AST tuple, given filename *)
-let parseAst src = 
+let parseAst src =
   match (parser src) with
   | Some ast -> (src, ast)
   | None -> (src, Go.Prog ([], Skip))
@@ -66,13 +70,26 @@ let printNormAst (src, ast) =
   Printf.printf "%s" (src); print_newline(); flush stdout;
   Printf.printf "%s" (print_prog 0 ast); print_newline(); flush stdout
  *)
+
 (* Loops through all files and prints out AST *)
-let testParser = 
+
+let testParser =
   let parserAstList = List.map parseAst parserTests in
   	List.map printAst parserAstList
+
 (* 
 let testNormParser = 
   let parserNormAstList = List.map parseNormAst parserTests in
     List.map printNormAst parserNormAstList
  *)
+(* 
+let testTypeChecker =
+  let parserAstList = List.map parseAst typeCheckerTests in
+    List.map printAst parserAstList
+
+let testNormParser =
+  let parserNormAstList = List.map parseNormAst parserTests in
+    List.map printNormAst parserNormAstList
+ *)
 let _ = testParser
+(* let _ = testNormParser  *)
