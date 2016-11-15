@@ -1,9 +1,9 @@
 (* File calc.ml *)
 open Go
-open Intermediate
+(* open Intermediate *)
 (* open Ty *)
-open Vm
-open Normalize
+(* open Vm *)
+(* open Normalize *)
 
 (* Here is a rough overview of the compiler stages *)
 (* Source --Parser--> AST --TypeCheck--> AST --Intermediate--> IR --CodeGen--> VM Code *)
@@ -17,7 +17,7 @@ let parser src =
   	None
 
 
-let typeCheck (ast : Go.prog) =
+(* let typeCheck (ast : Go.prog) =
   let typeCheckProg x y =
     if (List.length x) > 0
     then Some y
@@ -37,7 +37,7 @@ let compiler src = match (parser src) with
               | Some p -> match (intermediate p) with
                           | None -> None
                           | Some i -> codeGen i
-
+ *)
 (* Testing *)
 let parserTests = [
 	(* "./tests/ex1.go"; *)
@@ -57,7 +57,7 @@ let printAst (src, ast) =
 	Printf.printf "%s" (src); print_newline(); flush stdout;
 	Printf.printf "%s" (print_prog 0 ast); print_newline(); flush stdout
 
-let parseNormAst src =
+(* let parseNormAst src =
   match (parser src) with
   | Some ast -> (src, Normalize.normalizeProg ast)
   | None -> (src, Go.Prog ([], Skip))
@@ -65,14 +65,14 @@ let parseNormAst src =
 let printNormAst (src, ast) =
   Printf.printf "%s" (src); print_newline(); flush stdout;
   Printf.printf "%s" (print_prog 0 ast); print_newline(); flush stdout
-
+ *)
 (* Loops through all files and prints out AST *)
 let testParser = 
   let parserAstList = List.map parseAst parserTests in
   	List.map printAst parserAstList
-
+(* 
 let testNormParser = 
   let parserNormAstList = List.map parseNormAst parserTests in
     List.map printNormAst parserNormAstList
-
-let _ = testNormParser
+ *)
+let _ = testParser

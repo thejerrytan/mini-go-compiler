@@ -11,6 +11,9 @@ and irc_cmd = IRC_Assign of string * irc_exp
             | IRC_Call of int * int (* (label, number of parameters *)
             | IRC_Return of string
             | IRC_Get of string
+(* Need another one for getting params from stack *)
+
+(* Need another one for IRC_proc *)
 
 and irc_exp = IRC_And of string * string
             | IRC_Eq of string * string

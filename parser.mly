@@ -22,10 +22,10 @@ proc_list:
   | proc_list proc                 { $1 @ [$2] }
 ;
 proc:
-    FUNC NAME LPAREN param RPAREN types block    { Proc ($2, $4, Some($6), $7) }
-  | FUNC NAME LPAREN RPAREN types block          { Proc ($2, [], Some($5), $6) }
-  | FUNC NAME LPAREN param RPAREN block         { Proc ($2, $4, None, $6) }
-  | FUNC NAME LPAREN RPAREN block               { Proc ($2, [], None, $5) }
+    FUNC NAME LPAREN param RPAREN types block    { Proc ($2, $4, Some($6), (Locals([]), $7)) }
+  | FUNC NAME LPAREN RPAREN types block          { Proc ($2, [], Some($5), (Locals([]), $6)) }
+  | FUNC NAME LPAREN param RPAREN block         { Proc ($2, $4, None, (Locals([]), $6)) }
+  | FUNC NAME LPAREN RPAREN block               { Proc ($2, [], None, (Locals([]), $5)) }
 ;
 param:
      VARS types                      { [(Var ($1), $2)] }
@@ -43,14 +43,14 @@ statement:
   | NAME LANGLE MINUS aexp               { Transmit ($1, $4) }
   | LANGLE MINUS VARS                    { RcvStmt $3 }
   | LANGLE MINUS NAME                    { RcvStmt $3 }
-  | VARS COLON EQUAL bexp               { Decl ($1, $4) }
-  | NAME COLON EQUAL bexp               { Decl ($1, $4) }
+  | VARS COLON EQUAL bexp               { Decl (None, $1, $4) }
+  | NAME COLON EQUAL bexp               { Decl (None, $1, $4) }
   | VARS COLON EQUAL NEWCHANNEL         { DeclChan ($1) }
   | NAME COLON EQUAL NEWCHANNEL         { DeclChan ($1) }
   | VARS EQUAL bexp                     { Assign ($1, $3) }
   | NAME EQUAL bexp                     { Assign ($1, $3) }
-  | WHILE bexp block                      { While ($2, $3) }
-  | IF bexp block ELSE block              { ITE ($2, $3, $5) }
+  | WHILE bexp block                      { While ($2, (Locals([]), $3)) }
+  | IF bexp block ELSE block              { ITE ($2, (Locals([]), $3), (Locals([]), $5)) }
   | RETURN bexp                           { Return ($2) }
   | NAME LPAREN arg RPAREN                { FuncCall ($1, $3) }
   | NAME LPAREN RPAREN                    { FuncCall ($1, []) }
