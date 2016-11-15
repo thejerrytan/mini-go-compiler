@@ -1,11 +1,11 @@
 type prog = Prog of (proc list) * stmt (* Done *)
 
-and proc = Proc of string * ((exp * types) list) * (types option) * stmt (* To be implemented *)
+and proc = Proc of string * ((exp * types) list) * (types option) * stmt (* Done *)
 
 and types = TyInt (* OK *)
            | TyBool (* OK *)
            | TyChan of types (* OK *)
-           | TyFunc of (types list * types) (* OK *)
+           | TyFunc of (types list * types option) (* OK *)
 
 and stmt = Seq of stmt * stmt (* Done *)
           | Go of stmt (* Done *)
@@ -66,7 +66,7 @@ let rec print_exp d s = match s with
   | Var(x) -> linify [(indent d) ^ "Var " ^ x]
   (* | SkipExp -> linify [(indent d) ^ "SkipExp"] *)
 
-and print_exp_list d s = 
+and print_exp_list d s =
   linify (((indent d) ^ "List") :: (List.map (print_exp (d + 1)) s))
 
 let rec print_type d s = match s with
@@ -74,7 +74,7 @@ let rec print_type d s = match s with
   | TyBool  -> (indent d) ^ "TyBool"
   | TyChan t -> linify [(indent d) ^ "TyChan"; print_type (d + 1) t;]
   | TyFunc (ts, t) -> linify [(indent d) ^ "TyFunc"; print_type_list (d + 1) ts; print_type (d + 1) t]
-and print_type_list d s = 
+and print_type_list d s =
   linify (((indent d) ^ "List") :: (List.map (print_type (d + 1)) s))
 
 let print_type_option d s = match s with
@@ -105,7 +105,7 @@ let rec print_stmt d s = match s with
 let print_proc d s = match s with
   | Proc(x, ys, z, s) -> linify [(indent d) ^ "Proc"; print_string (d + 1) x; print_exp_type_list (d + 1) ys; print_type_option (d + 1) z; print_stmt (d + 1) s]
 
-let print_proc_list d s = 
+let print_proc_list d s =
   linify (((indent d) ^ "List") :: (List.map (print_proc (d + 1)) s))
 
 let rec print_prog d s = match s with
