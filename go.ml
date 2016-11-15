@@ -5,7 +5,7 @@ and proc = Proc of string * ((exp * types) list) * (types option) * stmt (* Done
 and types = TyInt (* OK *)
            | TyBool (* OK *)
            | TyChan of types (* OK *)
-           | TyFunc of (types list * types option) (* OK *)
+           | TyFunc of (types list * types) (* OK *)
 
 and stmt = Seq of stmt * stmt (* Done *)
           | Go of stmt (* Done *)

@@ -1,7 +1,7 @@
 (* File calc.ml *)
 open Go
 open Intermediate
-(* open Ty *)
+open Ty
 open Vm
 open Normalize
 
@@ -47,7 +47,7 @@ let parserTests = [
 ]
 
 let typeCheckerTests = [
-  "./tests/typeCheckerTest.go"
+  "./tests/typeCheckerDeclarationsTest.go"
 ]
 
 (* Returns filename and AST tuple, given filename *)
@@ -75,12 +75,18 @@ let printNormAst (src, ast) =
   let parserAstList = List.map parseAst parserTests in
   	List.map printAst parserAstList *)
 
+let testAst (src, ast) = match typeCheckProg [] ast with
+                         | Some ast -> Printf.printf "%s" (print_prog 0 ast); print_newline(); flush stdout;
+                         | None -> Printf.printf "%s" "fail"; print_newline(); flush stdout
+
 let testTypeChecker =
   let parserAstList = List.map parseAst typeCheckerTests in
-    List.map printAst parserAstList
+    List.map testAst parserAstList
 
 (* let testNormParser =
   let parserNormAstList = List.map parseNormAst parserTests in
     List.map printNormAst parserNormAstList
 
 let _ = testNormParser *)
+
+let _ = testTypeChecker

@@ -140,24 +140,25 @@ let rec typeCheckStmt env stmt = match stmt with
                           | None -> None) (* No such variable declared *)
   | Skip -> Some env
 
-  let rec updateEnvironmentWithExpressionTypeList etl = List.map (fun(vt) -> vt) etl
+let rec updateEnvironmentWithExpressionTypeList etl = List.map (fun(vt) -> match vt with
+                                                                         | (Var v, t) -> (v, t)) etl
 
-  let rec finalLineReturnType env s = match s with
-    | Seq (s1, s2) -> finalLineReturnType env s2 (* Since we are checking the final line, we can ignore the first line unless it is already the return statement itself *)
-    | Return e -> (match inferTyExp env e with
-                  | None -> None (* Type inference of return type failed *)
-                  | Some rt -> Some rt) (* We got a return type from type inference *)
-    | _ -> None
+let rec finalLineReturnType env s = match s with
+  | Seq (s1, s2) -> finalLineReturnType env s2 (* Since we are checking the final line, we can ignore the first line unless it is already the return statement itself *)
+  | Return e -> (match inferTyExp env e with
+                | None -> None (* Type inference of return type failed *)
+                | Some rt -> Some rt) (* We got a return type from type inference *)
+  | _ -> None
 
-  let rec isHaveReturnsInStatement s = match s with
-    | Seq (s1, s2) -> (match isHaveReturnsInStatement s1 with
-                      | Some s -> isHaveReturnsInStatement s2 (* There is no return statement in s1 so we check for the existence in s2 *)
-                      | None -> None) (* If the first statement s1 has a return statement, we can fail here *)
-    | Return e -> None (* Failure = None when there is a return statement detected *)
-    | _ -> Some s (* For any other statement that is not a return, we can simply just say it's a pass with a Some *)
+let rec isHaveReturnsInStatement s = match s with
+  | Seq (s1, s2) -> (match isHaveReturnsInStatement s1 with
+                    | Some s -> isHaveReturnsInStatement s2 (* There is no return statement in s1 so we check for the existence in s2 *)
+                    | None -> None) (* If the first statement s1 has a return statement, we can fail here *)
+  | Return e -> None (* Failure = None when there is a return statement detected *)
+  | _ -> Some s (* For any other statement that is not a return, we can simply just say it's a pass with a Some *)
 
 let rec typeCheckProc env proc = match proc with
-  | (v, etl, ot, s) -> (match lookup env v with
+  | Proc (v, etl, ot, s) -> (match lookup v env with
                        | Some t -> let env = updateEnvironmentWithExpressionTypeList etl in
                                    (match t with
                                     | TyFunc (tl, typeOption) -> (match ot with
@@ -174,6 +175,6 @@ let rec typeCheckProc env proc = match proc with
   | _ -> None
 
 let rec typeCheckProg env prog = match prog with
-  | (procl, s) -> (match (procl |> List.map (fun proc -> typeCheckProc env proc) |> List.filter (fun ty -> ty = None) |> List.length, typeCheckStmt env s) with
-                  | (0, Some t) -> Some env
+  | Prog (procl, s) -> (match (procl |> List.map (fun proc -> typeCheckProc env proc) |> List.filter (fun ty -> ty = None) |> List.length, typeCheckStmt env s) with
+                  | (0, Some t) -> Some prog
                   | _ -> None)
