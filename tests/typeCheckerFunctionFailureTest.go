@@ -10,10 +10,25 @@
 
 (* Correctly fail with return type int and declare a with int and then return an expression of type int *)
 
-func scaryTesting() int {
-  (* Add whatever to test whatever *)
+(* Correctly fail with return type and return type of wrong expression in ITE and While *)
+
+(* Correctly fail with parameters type and not being given right number of types *)
+
+(* Correctly fail with paramters type and not being given the right kind of types *)
+
+func fac(x int) int {
+  if x == 0 {
+    return 1
+  } else {
+    if x == 1 {
+      return 1
+    } else {
+      return x
+    }
+  }
 }
 
 {
-  return 0
+  x := fac(4);
+  print x
 }

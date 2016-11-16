@@ -5,25 +5,21 @@
   d := 1;          (* Decl int single digit *)
   e := false;      (* Decl bool *)
 
-  (* TODO: Add some failing tests cases that can be added *)
-
   e = !a;          (* Assign Not bool *)
   f := !false;     (* Decl Not bool false *)
-  (* TODO: This is failing f := !a; ReDecl not bool var *)
+  f := !a;         (* ReDecl not bool var *)
   e = a == b;      (* Assign Equality between 2 bools *)
   e = a && b;      (* And between 2 bools *)
   e = a && b == e; (* And between 2 bools equals between 2 bools *)
 
-  (* TODO: Add some failing tests cases that can be added *)
+  abcd := newChannel;   (* DeclChan var *)
+  j := newChannel;      (* DeclChan name *)
 
-  a := 1;          (* ReDecl int single digit *)
+  <- abcd;            (* RcvStmt var *)
+  abcd <- 1;          (* Transmit *)
 
-  (* TODO: Add some failing tests cases that can be added *)
-
-  (* TODO: This is failing g := <- f1; RcvExp var *)
-  (* TODO: This is failing g = <- f; RcvExp name *)
-
-  (* TODO: Add some failing tests cases that can be added *)
+  g := <- abcd;       (* Decl, RcvExp var *)
+  g = <- j;           (* RcvExp name *)
 
   h := 0;                  (* Decl int Literal *)
   h := c + d;              (* ReDecl int var Plus int var *)
@@ -32,12 +28,15 @@
   h = 100 * c;             (* Assign int Literal times int var *)
   h = d / c;               (* Assign int var Divide int var *)
 
-  (* TODO: Add some failing tests cases that can be added *)
-
   return 1;                 (* Return int *)
   return false;             (* Return bool Literal *)
   return true && false;     (* Return bool Literal And bool Literal *)
-  return c + d              (* Return int var + int var *)
+  return c + d;             (* Return int var + int var *)
 
-  (* TODO: Add some failing tests cases that can be added *)
+  go {              (* Go *)
+    b := true;      (* Decl *)
+    while (b) {     (* While *)
+      print(1 + 1)    (* Print *)
+    }
+  }
 }

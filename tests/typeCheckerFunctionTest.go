@@ -26,14 +26,34 @@ func testboolean() bool {  (* mul letter, return bool, no arg *)
   return true
 }
 
-(* TODO: testBooleanMultiple is failing *)
+func testbooleanmultiple(a int, b bool, cd chan int) bool {   (* mul letter, return bool, mul arg *)
+  a = a + 1;
+  b = !b;
+  c := <- cd;
+  return b
+}
 
-(* TODO: testChannel is failing *)
+func testchannel() chan int {
+  a := newChannel;
+  return a
+}
 
 func testchannelmul(a chan int) chan int {  (* mul letter, return chan int, 1 arg *)
   return a
 }
 
+func sometestforfunccallfuncexp() int {
+  return 0
+}
+
+func twoparams(a int, b int) int {
+  return 0
+}
+
 {
+  sometestforfunccallfuncexp();
+  x := sometestforfunccallfuncexp();
+  twoparams(1, 2);
+  x := twoparams(1, 2);
   return 0
 }

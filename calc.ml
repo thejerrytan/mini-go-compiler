@@ -44,16 +44,17 @@ let parserTests = [
 	(* "./tests/ex2.go"; *)
 	(* "./tests/ex3.go" *)
   (* "./tests/normalizeTest.go" *)
-  "./tests/typeCheckerDeclarationsTest.go"
+  (* "./tests/typeCheckerDeclarationsTest.go" *)
   (* "./tests/typeCheckerFunctionTest.go" *)
   (* "./tests/typeCheckerFunctionFailureTest.go" *)
 ]
 
 let typeCheckerTests = [
-  "./tests/typeCheckerDeclarationsTest.go"
+  (* "./tests/typeCheckerDeclarationsTest.go" *)
   (* "./tests/typeCheckerDeclarationsSpecialTest.go" *)
   (* "./tests/typeCheckerFunctionTest.go" *)
-  (* "./tests/typeCheckerFunctionFailureTest.go" *)
+  "./tests/typeCheckerFunctionFailureTest.go"
+  (* "./tests/typeCheckerSampleProgram.go" *)
 ]
 
 (* Returns filename and AST tuple, given filename *)
