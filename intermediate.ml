@@ -3,6 +3,7 @@ open Normalize
 open Go
 
 type irc = IRC of (irc_cmd list)
+[@@deriving show]
 
 and irc_cmd = IRC_Assign of string * irc_exp
             | IRC_Label of int
@@ -28,6 +29,7 @@ and irc_exp = IRC_And of string * string
 
 (* Need another one for IRC_proc *)
 and irc_proc = IRC_PROC of locals * string * int (* procedure call of string at memLoc int *)
+[@@deriving show]
 
 (* short-hand for 'zero' jump *)
 let irc_ZeroJump (x,l) = let y = freshName() in

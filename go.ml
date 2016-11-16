@@ -36,6 +36,7 @@ and exp = And of exp * exp (* Done *)
          | FuncExp of string * (exp list) (* Done *)
          (* | SkipExp *)
 and locals = Locals of (string * types) list
+[@@deriving show]
 
 let string_repeat s n =
   let len = Bytes.length s in

@@ -17,7 +17,7 @@ let parser src =
   	None
 
 
-(* let typeCheck (ast : Go.prog) =
+let typeCheck (ast : Go.prog) =
   let typeCheckProg x y =
     if (List.length x) > 0
     then Some y
@@ -37,7 +37,7 @@ let compiler src = match (parser src) with
               | Some p -> match (intermediate p) with
                           | None -> None
                           | Some i -> codeGen i
- *)
+
 (* Testing *)
 let parserTests = [
 	(* "./tests/ex1.go"; *)
@@ -92,4 +92,4 @@ let testNormParser =
     List.map printNormAst parserNormAstList
  *)
 (* let _ = testParser *)
-let _ = testNormParser 
+let _ = compiler "./tests/normalizeTest2.go" 
