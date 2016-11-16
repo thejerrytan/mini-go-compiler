@@ -1,4 +1,3 @@
-open Go
 (* A simple stack-based VM with shared memory *)
 
 (* VM supports only integers, so booleans need to be mapped to integer
@@ -51,6 +50,8 @@ type instructions =
 
                      JumpMemLoc == address stored in memory location,
                                    necessary for "return"
+
+                     NonZero/Zero will pop the jump address.
 
                   *)
                   | NonZero of int
@@ -240,14 +241,14 @@ let singleStep st id mem memLock t = match (List.nth t.code !(t.pc)) with
               false
 
   | NonZero i -> let x = t.stack.(!(t.sp) - 1) in
-                 inc t.sp;
+                 dec t.sp;
                  (if x == 0
                  then inc t.pc
                  else t.pc := i);
                  false
 
   | Zero i ->    let x = t.stack.(!(t.sp) - 1) in
-                 inc t.sp;
+                 dec t.sp;
                  (if x == 0
                  then t.pc := i
                  else inc t.pc);
