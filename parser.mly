@@ -12,6 +12,7 @@
 %token EOL EOF
 %start prog             /* the entry point */
 %type <Go.prog> prog
+%left SEMICOLON
 %%
 prog:
     block                          { Prog ([], $1) }
@@ -22,8 +23,8 @@ proc_list:
   | proc_list proc                 { $1 @ [$2] }
 ;
 proc:
-    FUNC NAME LPAREN param RPAREN types block    { Proc ($2, $4, Some($6), (Locals([]), $7)) }
-  | FUNC NAME LPAREN RPAREN types block          { Proc ($2, [], Some($5), (Locals([]), $6)) }
+    FUNC NAME LPAREN param RPAREN types return_block    { Proc ($2, $4, Some($6), (Locals([]), $7)) }
+  | FUNC NAME LPAREN RPAREN types return_block          { Proc ($2, [], Some($5), (Locals([]), $6)) }
   | FUNC NAME LPAREN param RPAREN block         { Proc ($2, $4, None, (Locals([]), $6)) }
   | FUNC NAME LPAREN RPAREN block               { Proc ($2, [], None, (Locals([]), $5)) }
 ;
@@ -35,6 +36,16 @@ param:
 ;
 block:
     LBRACE statement RBRACE    { $2 }
+  | LBRACE return_statement RBRACE    { $2 }
+  | LBRACE return_terminating_statement RBRACE { $2 }
+;
+return_block:
+    LBRACE return_terminating_statement RBRACE { $2}
+;
+
+return_terminating_statement:
+    statement SEMICOLON return_statement { Seq ($1, $3) }
+  | return_statement { $1 }
 ;
 statement:
     statement SEMICOLON statement         { Seq ($1, $3) }
@@ -51,11 +62,14 @@ statement:
   | NAME EQUAL bexp                     { Assign ($1, $3) }
   | WHILE bexp block                      { While ($2, (Locals([]), $3)) }
   | IF bexp block ELSE block              { ITE ($2, (Locals([]), $3), (Locals([]), $5)) }
-  | RETURN bexp                           { Return ($2) }
   | NAME LPAREN arg RPAREN                { FuncCall ($1, $3) }
   | NAME LPAREN RPAREN                    { FuncCall ($1, []) }
   | PRINT bexp                            { Print ($2) }
 ;
+return_statement:
+  | RETURN bexp                           { Return ($2) }
+;
+  
 bexp:
     cexp AMP AMP cexp        { And ($1, $4) }
     | cexp                   { $1 }

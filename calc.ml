@@ -1,7 +1,7 @@
 (* File calc.ml *)
 open Go
 (* open Intermediate *)
-open Ty
+(* open Ty *)
 (* open Vm *)
 (* open Normalize *)
 
@@ -40,9 +40,9 @@ let compiler src = match (parser src) with
  *)
 (* Testing *)
 let parserTests = [
-	(* "./tests/ex1.go"; *)
-	(* "./tests/ex2.go"; *)
-	(* "./tests/ex3.go" *)
+	"./tests/ex1.go";
+	"./tests/ex2.go";
+	"./tests/ex3.go"
   (* "./tests/normalizeTest.go" *)
   (* "./tests/typeCheckerDeclarationsTest.go" *)
   (* "./tests/typeCheckerFunctionTest.go" *)
@@ -84,18 +84,18 @@ let testParser =
   let parserAstList = List.map parseAst parserTests in
   	List.map printAst parserAstList
 
-let testAst (src, ast) = match typeCheckProg [] ast with
+(* let testAst (src, ast) = match typeCheckProg [] ast with
                          | Some ast -> Printf.printf "%s" (print_prog 0 ast); print_newline(); flush stdout;
                          | None -> Printf.printf "%s" "fail"; print_newline(); flush stdout
-
-let testTypeChecker =
+ *)
+(* let testTypeChecker =
   let parserAstList = List.map parseAst typeCheckerTests in
     List.map testAst parserAstList
-
+ *)
 (* let testNormParser =
   let parserNormAstList = List.map parseNormAst parserTests in
     List.map printNormAst parserNormAstList *)
 
-let _ = testTypeChecker
-(* let _ = testParser *)
+(* let _ = testTypeChecker *)
+let _ = testParser
 (* let _ = testNormParser  *)
