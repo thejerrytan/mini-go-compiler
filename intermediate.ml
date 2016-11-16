@@ -158,7 +158,7 @@ let rec translateB exp = match exp with
 (* let lookup id = 1 *)
 
 (* We do not return a tuple of (IRC_cmd list, value) because there is nothing to evaluate *)
-let rec translateStmt s = match s with
+let rec translateStmt s : (irc_cmd list) = match s with
     | Seq (s1, s2) -> translateStmt s1 @ translateStmt s2
     | Go (s1) -> translateStmt s1
     | Decl (t, s1, e1) -> let x = freshName() in
@@ -199,3 +199,16 @@ let rec translateStmt s = match s with
     | DeclChan (x) -> [IRC_Skip]
     | RcvStmt (x) -> [IRC_Skip]
     | Transmit (x, e1) -> [IRC_Skip]
+
+let translateProc proc : (irc_cmd list) = [] (* match proc with
+  | Proc (name, arg_name_types, return_type_option, (locals * stmt)) ->
+    [freshLabel ()] @
+    (List.map () (List.length arg_name_types)) (* pop n times from stack *)
+*)
+
+let translateProcs procs : (irc_cmd list) =
+  List.flatten (List.map translateProc procs)
+
+let rec translateProg p : irc = match p with
+  | Prog (procs, stmt) -> IRC ((translateProcs procs) @ (translateStmt stmt))
+
