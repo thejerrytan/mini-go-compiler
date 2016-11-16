@@ -6,3 +6,6 @@ lexer.ml
 *.cmi
 calc
 
+_build/*
+*.native
+
