@@ -8,4 +8,4 @@ calc
 
 _build/*
 *.native
-
+tmp*
