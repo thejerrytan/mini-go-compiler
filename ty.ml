@@ -7,8 +7,9 @@ let rec eqTy t1 t2 = match (t1, t2) with
   | (TyFunc (ts1, Some t1), TyFunc (ts2, Some t2)) -> eqTy t1 t2 &&
                                                       (List.length ts1 == List.length ts2) &&
                                                       (List.for_all (fun (t1,t2) -> eqTy t1 t2) (List.combine ts1 ts2))
+  | (_, _) -> false
 
-let lookup el lst = try (Some (snd (List.find (fun (el2,_) -> el = el2) lst))) with
+let lookup el lst = try (Some (snd (List.find (fun (el2, _) -> el = el2) lst))) with
                     | Not_found -> None
 
 let rec compareList l1 l2 = match (l1, l2) with
@@ -200,6 +201,7 @@ let rec augmentStatement env stmt = match stmt with
   | Go s -> (match augmentStatement env s with
             | Some s1 -> Some (Go (s1))
             | None -> None)
+            (* Account for ITE and While and DeclChan *)
   | _ -> Some stmt
 
 let rec typeCheckProc env proc = match proc with
@@ -239,11 +241,13 @@ let rec makeLocalsKnown env stmt = match stmt with
             | None -> None)
   | DeclChan v -> Some (update (v, TyChan (TyInt)) env, stmt)
   | _ -> Some (env, stmt)
+(* TODO: make locals known in stmt and pass environment from seq 1 to seq 2 and account for ITE and the rest *)
+(* TODO: enrich decl in proc *)
 
 let augmentProc env proc = match proc with
   | Proc (v, etl, ot, ls) -> let l1 = updateEnvironmentWithExpressionTypeList etl in
                              match ls with
-                             | (Locals (l), s) -> match makeLocalsKnown l1 s with
+                             | (Locals (l), s) -> match makeLocalsKnown (env @ l1) s with
                                                   | Some (env1, s1) -> Proc (v, etl, ot, (Locals (env1), s1))
                              (* we assume that before we augment any proc,
                              the initial state of locals is an empty list so we ignore it *)
@@ -251,15 +255,21 @@ let augmentProc env proc = match proc with
 let removeOptionForEnv env = List.map (fun pair -> match pair with
   | Some (a, b) -> (a, b)) (List.filter (fun something -> something <> None) env)
 
+let prototypeEnvFromProcl procl = List.map (fun proc -> match proc with
+                                                        | Proc (v, etl, ot, (Locals (l), s)) -> Some (v, TyFunc (extractTypes etl, ot))) procl
+
 let rec typeCheckProg env prog = match prog with
-  | Prog (procl, s) -> let augmentedProcl = List.map (fun proc -> augmentProc env proc) procl in (* adding locals into each proc *)
-                         let env1 = List.map (fun proc -> typeCheckProc env proc) augmentedProcl in (* making sure that proc's return type is similar with the statement *)
-                           let failures = List.filter (fun ty -> ty = None) env1 in
-                             let numberOfFailures = List.length failures in
-                               if numberOfFailures <> 0 then None else
-                                 let typeCheckedStatements = typeCheckStmt (List.map (fun something -> match something with Some (s, t) -> (s, t)) env1) s in
-                                   match (numberOfFailures, typeCheckedStatements) with
-                                   | (0, Some env) -> match augmentStatement env s with
-                                                      | Some s -> Some (Prog (augmentedProcl, s))
-                                                      | None -> None
-                                   | _ -> None
+  | Prog (procl, s) -> let prototypeEnv = prototypeEnvFromProcl procl in
+                         if List.length (List.filter (fun x -> x = None) prototypeEnv) <> 0 then None else
+                           let prototypeEnvi = List.map (fun something -> match something with Some (s, t) -> (s, t)) prototypeEnv in
+                             let augmentedProcl = List.map (fun proc -> augmentProc prototypeEnvi proc) procl in (* adding locals into each proc *)
+                               let env1 = List.map (fun proc -> typeCheckProc prototypeEnv proc) augmentedProcl in (* making sure that proc's return type is similar with the statement *)
+                                 let failures = List.filter (fun ty -> ty = None) env1 in
+                                   let numberOfFailures = List.length failures in
+                                     if numberOfFailures <> 0 then None else
+                                       let typeCheckedStatements = typeCheckStmt (List.map (fun something -> match something with Some (s, t) -> (s, t)) env1) s in
+                                         match (numberOfFailures, typeCheckedStatements) with
+                                         | (0, Some env) -> (match augmentStatement env s with
+                                                            | Some s -> Some (Prog (augmentedProcl, s))
+                                                            | None -> None)
+                                         | _ -> None
