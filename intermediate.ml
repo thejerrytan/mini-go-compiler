@@ -158,13 +158,16 @@ let rec translateB exp = match exp with
 
 (* We do not return a tuple of (IRC_cmd list, value) because there is nothing to evaluate *)
 let rec translateStmt s : (irc_cmd list) = match s with
-    | Seq (s1, s2) -> translateStmt s1 @ translateStmt s2
+    | Seq (s1, s2) -> 
+      let left_stmt = translateStmt s1 in
+      let right_stmt = translateStmt s2 in
+      left_stmt @ right_stmt
     | Go (s1) -> translateStmt s1
-    | Decl (t, s1, e1) -> let x = freshName() in
-                          let r1 = translateB e1 in
+    | Decl (t, s1, e1) -> let r1 = translateB e1 in
+                          let x = freshName() in
                           (fst r1) @ [IRC_Assign (x, IRC_Var (snd r1))]
-    | Assign (s1, e1) -> let x = freshName() in
-                         let r1 = translateB e1 in
+    | Assign (s1, e1) -> let r1 = translateB e1 in
+                         let x = freshName() in
                          (fst r1) @ [IRC_Assign (x, IRC_Var (snd r1))]
     | While (e1, (locals, s1)) -> 
                                   let r1 = translateB e1 in
@@ -185,14 +188,14 @@ let rec translateStmt s : (irc_cmd list) = match s with
                                                     @ [IRC_Label l2]
                                                     @ r3
                                                     @ [IRC_Label l1]
-    | Return e1 -> let x = freshName() in
-                   let r1 = translateB e1 in
+    | Return e1 -> let r1 = translateB e1 in
+                   let x = freshName() in
                    (fst r1)
                    @ [IRC_Assign (x, IRC_Var(snd r1))]
                    @ [IRC_Return x]
     | FuncCall (s1, es) -> [IRC_Skip]
-    | Print (e1) -> let x = freshName() in
-                    let r1 = translateB e1 in
+    | Print (e1) -> let r1 = translateB e1 in
+                    let x = freshName() in
                     (fst r1) @ [IRC_Assign (x, IRC_Var(snd r1))] @ [IRC_Skip]
     | Skip -> [IRC_Skip]
     | DeclChan (x) -> [IRC_Skip]
