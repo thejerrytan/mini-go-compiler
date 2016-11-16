@@ -113,4 +113,12 @@ let testTypeChecker =
  *)
 
 (* let _ = testParser *)
-let _ = compiler "./tests/normalizeTest2.go" 
+let _ = 
+  if (Array.length Sys.argv < 2) then
+    raise (Invalid_argument "Usage: ./calc.native (filename)")
+  else
+    let src = Sys.argv.(1) in
+    compiler src
+    
+
+
