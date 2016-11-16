@@ -8,6 +8,8 @@ open Normalize
 (* Here is a rough overview of the compiler stages *)
 (* Source --Parser--> AST --TypeCheck--> AST --Intermediate--> IR --CodeGen--> VM Code *)
 
+let ( |> ) x f = f x (* pipeline function *)
+
 let parser src =
   let lexbuf = Lexing.from_channel (open_in src) in
   try
@@ -22,21 +24,28 @@ let typeCheck (ast : Go.prog) =
     if (List.length x) > 0
     then Some y
   	else None
-  in match typeCheckProg [] ast with
-  | Some (x) -> Some x
-  | None -> None
+  in typeCheckProg [] ast
 
-let intermediate (ast : Go.prog) = Some (Intermediate.IRC [])
-let codeGen (ir : Intermediate.irc) = Some [Vm.Halt]
+let intermediate (ast : Go.prog) = Intermediate.translateProg ast
+
+let codeGen (irc : Intermediate.irc) = Codegen.codegen irc
 
 (* Chain all the stages together *)
-let compiler src = match (parser src) with
-  | None -> None
-  | Some p -> match (typeCheck p) with
-              | None -> None
-              | Some p -> match (intermediate p) with
-                          | None -> None
-                          | Some i -> codeGen i
+
+let compiler src = src 
+  |> parser
+  |> (fun s -> match s with
+      | None -> raise (Failure "Parsing error!")
+      | Some p -> p)
+  |> typeCheck
+  |> (fun s -> match s with
+      | None -> raise (Failure "Type error!")
+      | Some p -> p)
+  |> intermediate
+  |> (fun s -> match s with
+      | None -> raise (Failure "Intermediate code generation error!")
+      | Some p -> p)
+  |> codeGen
 
 (* Testing *)
 let parserTests = [
@@ -72,17 +81,15 @@ let printNormAst (src, ast) =
 
 
 (* Loops through all files and prints out AST *)
-
+(* 
 let testParser =
   let parserAstList = List.map parseAst parserTests in
   	List.map printAst parserAstList
-
 
 let testNormParser = 
   let parserNormAstList = List.map parseNormAst parserTests in
     List.map printNormAst parserNormAstList
 
-(* 
 let testTypeChecker =
   let parserAstList = List.map parseAst typeCheckerTests in
     List.map printAst parserAstList

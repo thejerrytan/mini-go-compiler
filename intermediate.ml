@@ -209,6 +209,6 @@ let translateProc proc : (irc_cmd list) = [] (* match proc with
 let translateProcs procs : (irc_cmd list) =
   List.flatten (List.map translateProc procs)
 
-let rec translateProg p : irc = match p with
-  | Prog (procs, stmt) -> IRC ((translateProcs procs) @ (translateStmt stmt))
+let rec translateProg p : irc option = match p with
+  | Prog (procs, stmt) -> Some (IRC ((translateProcs procs) @ (translateStmt stmt)))
 
