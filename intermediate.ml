@@ -1,6 +1,10 @@
 (* Intermediate.ml *)
-open Normalize
 open Go
+
+let nameSupply = ref 0
+let freshName _ =  nameSupply := !nameSupply + 1;
+                   String.concat "" ["_irc" ; string_of_int (!nameSupply )] 
+
 
 type irc = IRC of (irc_cmd list)
 [@@deriving show]
