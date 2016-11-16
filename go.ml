@@ -35,6 +35,7 @@ and exp = And of exp * exp (* Done *)
          | Var of string (* Done *)
          | FuncExp of string * (exp list) (* Done *)
          (* | SkipExp *)
+
 and locals = Locals of (string * types) list
 [@@deriving show]
 
@@ -78,7 +79,7 @@ let rec print_type d s = match s with
   | TyFunc (ts, t) -> match t with
     | Some t -> linify [(indent d) ^ "TyFunc"; print_type_list (d + 1) ts; print_type (d + 1) t]
     | None -> linify [(indent d) ^ "TyFunc"; print_type_list (d + 1) ts; (indent (d+1)) ^ "None"]
-and print_type_list d s = 
+and print_type_list d s =
   linify (((indent d) ^ "List") :: (List.map (print_type (d + 1)) s))
 
 let print_type_option d s = match s with

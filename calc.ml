@@ -78,7 +78,11 @@ let parserTests = [
 ]
 
 let typeCheckerTests = [
-  "./tests/typeCheckerTest.go"
+  (* "./tests/typeCheckerDeclarationsTest.go" *)
+  (* "./tests/typeCheckerDeclarationsSpecialTest.go" *)
+  (* "./tests/typeCheckerFunctionTest.go" *)
+  "./tests/typeCheckerFunctionFailureTest.go"
+  (* "./tests/typeCheckerSampleProgram.go" *)
 ]
 
 (* Returns filename and AST tuple, given filename *)
@@ -105,11 +109,8 @@ let testNormParser =
 
 let testTypeChecker =
   let parserAstList = List.map parseAst typeCheckerTests in
-    List.map printAst parserAstList
-
-let testNormParser =
-  let parserNormAstList = List.map parseNormAst parserTests in
-    List.map printNormAst parserNormAstList
+    List.map testAst parserAstList
  *)
+
 (* let _ = testParser *)
 let _ = compiler "./tests/normalizeTest2.go" 
