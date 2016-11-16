@@ -4,6 +4,8 @@ open Go
 (* open Ty *)
 (* open Vm *)
 open Normalize
+open Vm
+
 
 (* Here is a rough overview of the compiler stages *)
 (* Source --Parser--> AST --TypeCheck--> AST --Intermediate--> IR --CodeGen--> VM Code *)
@@ -62,6 +64,10 @@ let compiler src = src
       | Some p -> p)
   |> (fun s -> (Printf.printf "\nIntermediate Code:\n%s" (Intermediate.show_irc s)); print_newline(); flush stdout; s)
   |> codeGen
+  |> (fun s -> match s with
+      | None -> raise (Failure "VM code generation error!")
+      | Some p -> p)
+  |> (fun s -> (Printf.printf "\nVM Code:\n%s" (String.concat "\n" (List.map Vm.show_instructions s))); print_newline(); flush stdout; s)
 
 (* Testing *)
 let parserTests = [

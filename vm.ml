@@ -123,7 +123,8 @@ type instructions =
                   | Lock of int
                   | Unlock of int
                   | Thread of instructions list
-                                
+[@@deriving show]
+
 type lockInfo = { locked : bool;
                   threadID : int }                             
 
