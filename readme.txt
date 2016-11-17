@@ -1,3 +1,9 @@
+Team members:
+
+1. Jerry Tan
+2. Andhieka Putra
+3. Yap Jun Hao
+
 In order to compile and run tests for parser and type checker:
 
 1. Run ./run.sh in the shell in the root folder
