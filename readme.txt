@@ -14,6 +14,8 @@ compare the AST against the file name to see the program and check if the progra
 2. For invalid parsing, the parser tests will print "Failed with reason: %s" reason along with the file name,
 open the file with the file name in order to see the invalid program and a comment on why the program is invalid
 and thus should be parsed as invalid
+3. Note that we have less tests here as the type checker tests following also uses the parser
+as a basis and hence has it "tested" as well
 
 For type checker:
 
