@@ -2,6 +2,19 @@ open Intermediate
 open Vm
 
 let tbl = Hashtbl.create 100 (* Hashtable for remembering labels -> line_number mapping *)
+let funcTbl = Hashtbl.create 100 (* Hashtable for remembering function names to labels mapping *)
+
+(* Walk through the lists again to replace Goto labels with their specific instruction line number *)
+let gotoLabel irc = List.map 
+	(fun instr -> match instr with
+		| Jump x -> let lineNo = try (Hashtbl.find tbl x) with
+					| Not_found -> print_endline ("[Codegen] Cannot find label: " ^ (string_of_int x)); 1
+					in Jump lineNo
+		| NonZero x -> let lineNo = try (Hashtbl.find tbl x) with
+							 | Not_found -> print_endline ("[Codegen] Cannot find label: " ^ (string_of_int x)); 1
+							 in NonZero lineNo 
+		| el -> el
+	) irc
 
 (* Takes a list of IRC commands and outputs a (final_instr_no., list of VM instructions) tuple,
    Replaces symbolic labels with current instruction line number
@@ -20,15 +33,17 @@ let codegen i (irc : Intermediate.irc) = match irc with
 					| IRC_Assign (s1, IRC_Eq (x, y)) -> (fst ls)+5, (snd ls)@[PushToStack x;PushToStack y;Eq;AssignFromStack (1, s1);PopS]
 					| IRC_Assign (s1, IRC_And (x, y)) -> (fst ls)+1, (snd ls)@[Halt] (* And will never appear in VM, shown here for complete matching sake *)
 					| IRC_Assign (s1, IRC_Var (x)) -> (fst ls)+3, (snd ls)@[PushToStack x;AssignFromStack (1, s1);PopS]
-					| IRC_Label (l1) -> Hashtbl.add tbl l1 (fst ls) ;(fst ls), (snd ls)@[] (* We do not generate any VM instruction, but update label -> instr mapping *)
-					| IRC_Goto (l1) -> let lineNo = Hashtbl.find tbl l1 in 
-										(fst ls)+1, (snd ls)@[Jump lineNo]
-					| IRC_NonzeroJump (s1, l1) -> let lineNo = Hashtbl.find tbl l1 in
-												  (fst ls)+2, (snd ls)@[PushToStack s1;NonZero lineNo]
-					| IRC_Param (s1) -> (fst ls)+1, (snd ls)@[Halt]
-					| IRC_Call (l1, nos) -> (fst ls)+1, (snd ls)@[Halt]
-					| IRC_Return (x) -> (fst ls)+1, (snd ls)@[Halt]
-					| IRC_Get (s1) -> (fst ls)+1, (snd ls)@[Halt]
+					| IRC_Assign (s1, IRC_Get) -> (fst ls)+2, (snd ls)@[AssignFromEnv (1, s1);PopE]
+					| IRC_Label (l1) -> Hashtbl.add tbl l1 ((fst ls)+1) ;(fst ls), (snd ls)@[] (* We do not generate any VM instruction, but update label -> instr mapping *)
+					| IRC_Goto (l1) -> (fst ls)+1, (snd ls)@[Jump l1] (* we will replace them later once the hashtable is guaranteed to contain the mapping *)
+					| IRC_NonzeroJump (s1, l1) -> (fst ls)+2, (snd ls)@[PushToStack s1;NonZero l1]
+					| IRC_Param (s1) -> (fst ls)+1, (snd ls)@[PushToEnv s1]
+					| IRC_Call (s1, nos) -> let l1 = Hashtbl.find funcTbl s1 in
+											(fst ls)+1, (snd ls)@[Jump l1]
+					| IRC_Return (x) -> (fst ls)+1, (snd ls)@[PushE ((fst ls)+2)] (* +2 because we want to skip the following Jump for FuncCall *)
+(* 					| IRC_Get (s1) -> (fst ls)+2 (snd ls)@[AssignFromEnv (1, s1);PopE] *)
+					| IRC_Proc (lcls, name, l1) -> Hashtbl.add funcTbl name l1;(fst ls)+10, (snd ls)@[]
 					| IRC_Skip -> (fst ls)+1, (snd ls)@[Halt]
 				) (i , []) cmds in
-			  print_endline ("No. of VM instructions : " ^ string_of_int (fst res)); Some (snd res)
+			  print_endline ("No. of VM instructions : " ^ string_of_int ((fst res)+1));
+			  Some(gotoLabel (snd res))

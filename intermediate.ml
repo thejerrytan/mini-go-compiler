@@ -3,13 +3,16 @@
 open Go
 
 let tbl = Hashtbl.create 1000 (* hashtable to hold string variable names to memloc int mapping *)
+let funcLocals = Hashtbl.create 100 (* Hashtable to hold func names to local variables list mapping *)
+let localsOffset = 1000 (* Memory offset for local variables pushed onto RTE, this way we do not need to maintain var_name -> memLoc mapping during FuncCalls *)
 let nameSupply = ref (-1)
 let freshName _ = nameSupply := !nameSupply + 1;
                 !nameSupply (* here we let temp variables be int which allows us to do a direct mapping to int memloc later *)
 let labelSupply = ref 1
 let freshLabel _ =  labelSupply := !labelSupply + 1;
                     !labelSupply
-let lookup var = Hashtbl.find tbl var
+let lookup var = try(Hashtbl.find tbl var) with
+                  | Not_found -> print_endline ("[Intermediate] Cannot find var: " ^ var);1
 
 type irc = IRC of (irc_cmd list)
 [@@deriving show]
@@ -19,10 +22,10 @@ and irc_cmd = IRC_Assign of int * irc_exp
             | IRC_Goto of int
             | IRC_NonzeroJump of int * int  (* if x L = if x non-zero then jump to L *)
             | IRC_Param of int (* Push param onto stack *)
-            | IRC_Call of int * int (* (label, number of parameters *)
+            | IRC_Call of string * int (* (function name, number of parameters *)
             | IRC_Return of int (* Push return value onto stack? *)
-            | IRC_Get of int (* Get from stack? *)
             | IRC_Skip
+            | IRC_Proc of (string list) * string * int (* procedure call of string at instruction label *)
 (* Need another one for getting params from stack *)
 
 and irc_exp = IRC_And of int * int
@@ -35,9 +38,7 @@ and irc_exp = IRC_And of int * int
             | IRC_Not of int
             | IRC_IConst of int
             | IRC_Var of int                                    
-
-(* Need another one for IRC_proc *)
-and irc_proc = IRC_PROC of locals * string * int (* procedure call of string at memLoc int *)
+            | IRC_Get (* Get from top of Env and assign to mem *)
 
 (* short-hand for 'zero' jump *)
 let irc_ZeroJump (x,l) = let y = freshName() in
@@ -157,7 +158,19 @@ let rec translateB exp = match exp with
 | Var (x) -> let y = lookup x in
              ([IRC_Assign (y, IRC_Var(y))], y) (* !!!NOT SURE *)
 | RcvExp (x) -> let y = freshName() in ([IRC_Skip], y)
-| FuncExp (s, es) -> let y = freshName() in ([IRC_Skip], y)
+| FuncExp (s, es) -> let y = freshName() in
+                     let l1 = freshLabel() in
+                     let expls = List.map translateB es in
+                     let res = List.fold_left (fun acc el -> acc@(fst el)) [] expls in
+                     let eval = List.fold_left (fun acc el -> acc@[snd el]) [] expls in
+                     let initParams = List.map (fun el -> IRC_Param el) eval in
+                     let initLocals = List.map (fun el -> IRC_Param (lookup el)) (Hashtbl.find funcLocals s) in
+                     (res
+                      @ initLocals
+                      @ initParams
+                      @ [IRC_Return l1] (* Save the return address *)
+                      @ [IRC_Call (s, List.length initParams)]
+                      @ [IRC_Assign (y, IRC_Get)], y)
 
 (* We do not return a tuple of (IRC_cmd list, value) because there is nothing to evaluate *)
 let rec translateStmt s : (irc_cmd list) = match s with
@@ -176,10 +189,13 @@ let rec translateStmt s : (irc_cmd list) = match s with
     | While (e1, (locals, s1)) -> 
                                   let r1 = translateB e1 in
                                   let l1 = freshLabel() in
+                                  let l2 = freshLabel() in
                                   [IRC_Label l1]
-                                  @ (translateStmt s1)
                                   @ (fst r1)
-                                  @ [IRC_NonzeroJump ((snd r1), l1)]
+                                  @ irc_ZeroJump ((snd r1), l2) 
+                                  @ (translateStmt s1)
+                                  @ [IRC_Goto l1]
+                                  @ [IRC_Label l2]
     | ITE (e1, (locals_s1, s1), (locals_s2, s2)) -> let r1 = translateB e1 in
                                                     let r2 = translateStmt s1 in
                                                     let r3 = translateStmt s2 in
@@ -197,7 +213,17 @@ let rec translateStmt s : (irc_cmd list) = match s with
                    (fst r1)
                    @ [IRC_Assign (x, IRC_Var(snd r1))]
                    @ [IRC_Return x]
-    | FuncCall (s1, es) -> [IRC_Skip]
+    | FuncCall (s1, es) -> let expls = List.map translateB es in
+                           let res = List.fold_left (fun acc el -> acc@(fst el)) [] expls in
+                           let eval = List.fold_left (fun acc el -> acc@[snd el]) [] expls in
+                           let initParams = List.map (fun el -> IRC_Param el) eval in
+                           let initLocals = List.map (fun el -> IRC_Param (lookup el)) (Hashtbl.find funcLocals s1) in
+                           let l1 = freshLabel() in
+                           res
+                           @ initLocals
+                           @ initParams
+                           @ [IRC_Return l1] (* Save the return address *)
+                           @ [IRC_Call (s1, List.length initParams)]
     | Print (e1) -> let r1 = translateB e1 in
                     let x = freshName() in
                     (fst r1) @ [IRC_Assign (x, IRC_Var(snd r1))] @ [IRC_Skip]
@@ -206,11 +232,16 @@ let rec translateStmt s : (irc_cmd list) = match s with
     | RcvStmt (x) -> [IRC_Skip]
     | Transmit (x, e1) -> [IRC_Skip]
 
-let translateProc proc : (irc_cmd list) = [] (* match proc with
-  | Proc (name, arg_name_types, return_type_option, (locals * stmt)) ->
-    [freshLabel ()] @
-    (List.map () (List.length arg_name_types)) (* pop n times from stack *)
-*)
+let removeTypes locals = match locals with 
+  | Locals(ls) -> List.map (fun el -> fst el) ls
+
+let translateProc func : (irc_cmd list) = match func with
+  | Proc (name, args, ty, (locals, stmt)) -> let lcls = removeTypes locals in
+                                                let l1 = freshLabel() in
+                                                Hashtbl.add funcLocals name lcls;
+                                                [IRC_Label l1]
+                                                @ [IRC_Proc (lcls, name, l1)]
+                                                @ translateStmt stmt
 
 let translateProcs procs : (irc_cmd list) =
   List.flatten (List.map translateProc procs)
