@@ -18,11 +18,12 @@ and thus should be parsed as invalid
 For type checker:
 
 1. The type checker will spit out an AST that is enriched with filled locals as long as it doesn't fail,
-along with the file name, compare the AST that is spit out against the file name to see the enriching and the
+along with the file name and an abbreviated comment on the program in the file,
+compare the AST that is spit out against the content in the file name to see the enriching and the
 validity of the program
-2. For invalid programs, the type checker tests will print "Failed with %s" reason along with the file name,
-open the file with the file name in order to see the invalid program and a comment on why the program is invalid
-and thus should be type checked as invalid
+2. For invalid programs, the type checker tests will print "Failed with reason: %s" reason along with
+the file name, open the file with the file name in order to see the invalid program and a
+comment on why the program is invalid and thus should be type checked as invalid
 
 Some comments:
 

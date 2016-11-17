@@ -1,3 +1,5 @@
+(* Recursive ping and pong functions by us - passes type checking *)
+
 func ping(x int) int {
   if x == 0 {
     return 0

@@ -1,3 +1,5 @@
+(* Sample program on the project website - valid and passes type checking *)
+
 {
   x := 1;
   y := true;

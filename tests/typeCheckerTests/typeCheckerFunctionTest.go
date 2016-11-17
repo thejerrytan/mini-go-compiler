@@ -1,3 +1,5 @@
+(* Multiple valid function declarations - passes type checking *)
+
 func s() int {  (* single letter, return int, no arg *)
   return 0
 }
