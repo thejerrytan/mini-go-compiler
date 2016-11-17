@@ -338,3 +338,5 @@ let testProg1 = [PushS 1; PushS 2; Add; Output; Halt]
 let testProg2 = [PushS 1; PushS 2; Lt; Output; Halt]                  
                           
 let getThread st i = (List.nth !(st.threads) i)
+
+let _ = run testProg2;;

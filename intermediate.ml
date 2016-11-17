@@ -1,31 +1,40 @@
 (* Intermediate.ml *)
-open Normalize
+(* open Normalize *)
 open Go
+
+let tbl = Hashtbl.create 1000 (* hashtable to hold string variable names to memloc int mapping *)
+let nameSupply = ref 0
+let freshName _ = nameSupply := !nameSupply + 1;
+                !nameSupply (* here we let temp variables be int which allows us to do a direct mapping to int memloc later *)
+let labelSupply = ref 1
+let freshLabel _ =  labelSupply := !labelSupply + 1;
+                    !labelSupply
+let lookup var = Hashtbl.find tbl var
 
 type irc = IRC of (irc_cmd list)
 [@@deriving show]
 
-and irc_cmd = IRC_Assign of string * irc_exp
+and irc_cmd = IRC_Assign of int * irc_exp
             | IRC_Label of int
             | IRC_Goto of int
-            | IRC_NonzeroJump of string * int  (* if x L = if x non-zero then jump to L *)
-            | IRC_Param of string (* Push param onto stack *)
+            | IRC_NonzeroJump of int * int  (* if x L = if x non-zero then jump to L *)
+            | IRC_Param of int (* Push param onto stack *)
             | IRC_Call of int * int (* (label, number of parameters *)
-            | IRC_Return of string (* Push return value onto stack? *)
-            | IRC_Get of string (* Get from stack? *)
+            | IRC_Return of int (* Push return value onto stack? *)
+            | IRC_Get of int (* Get from stack? *)
             | IRC_Skip
 (* Need another one for getting params from stack *)
 
-and irc_exp = IRC_And of string * string
-            | IRC_Eq of string * string
-            | IRC_Gt of string * string
-            | IRC_Plus of string * string
-            | IRC_Minus of string * string
-            | IRC_Times of string * string
-            | IRC_Division of string * string
-            | IRC_Not of string
+and irc_exp = IRC_And of int * int
+            | IRC_Eq of int * int
+            | IRC_Gt of int * int
+            | IRC_Plus of int * int
+            | IRC_Minus of int * int
+            | IRC_Times of int * int
+            | IRC_Division of int * int
+            | IRC_Not of int
             | IRC_IConst of int
-            | IRC_Var of string                                    
+            | IRC_Var of int                                    
 
 (* Need another one for IRC_proc *)
 and irc_proc = IRC_PROC of locals * string * int (* procedure call of string at memLoc int *)
@@ -34,10 +43,6 @@ and irc_proc = IRC_PROC of locals * string * int (* procedure call of string at 
 let irc_ZeroJump (x,l) = let y = freshName() in
                          [IRC_Assign (y, IRC_Not x);
                           IRC_NonzeroJump (y,l)]
-
-let labelSupply = ref 1
-let freshLabel _ =  labelSupply := !labelSupply + 1;
-                    !labelSupply
 
 (* (parts) of translation of Booleans (short-circuit evaluation!),
    yields a tuple where first component represents the IRC and
@@ -149,12 +154,10 @@ let rec translateB exp = match exp with
                        @ [IRC_Assign (z, IRC_Division (x, y))],z)
 | IConst i -> let x = freshName() in
               ([IRC_Assign (x, IRC_IConst (i))], x)
-| Var (x) -> let y = freshName() in
-             ([IRC_Assign (y, IRC_Var(x))], y) (* !!!NOT SURE *)
-| RcvExp (x) -> ([IRC_Skip], x)
-| FuncExp (s, es) -> ([IRC_Skip], s)
-
-(* let lookup id = 1 *)
+| Var (x) -> let y = lookup x in
+             ([IRC_Assign (y, IRC_Var(y))], y) (* !!!NOT SURE *)
+| RcvExp (x) -> let y = freshName() in ([IRC_Skip], y)
+| FuncExp (s, es) -> let y = freshName() in ([IRC_Skip], y)
 
 (* We do not return a tuple of (IRC_cmd list, value) because there is nothing to evaluate *)
 let rec translateStmt s : (irc_cmd list) = match s with
@@ -165,10 +168,11 @@ let rec translateStmt s : (irc_cmd list) = match s with
     | Go (s1) -> translateStmt s1
     | Decl (t, s1, e1) -> let r1 = translateB e1 in
                           let x = freshName() in
+                          Hashtbl.add tbl s1 x;
                           (fst r1) @ [IRC_Assign (x, IRC_Var (snd r1))]
     | Assign (s1, e1) -> let r1 = translateB e1 in
-                         let x = freshName() in
-                         (fst r1) @ [IRC_Assign (x, IRC_Var (snd r1))]
+                         let y = lookup s1 in
+                         (fst r1) @ [IRC_Assign (y, IRC_Var (snd r1))]
     | While (e1, (locals, s1)) -> 
                                   let r1 = translateB e1 in
                                   let l1 = freshLabel() in
