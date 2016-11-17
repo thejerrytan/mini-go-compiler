@@ -61,12 +61,12 @@ let compiler src = src
   |> (fun s -> match s with
       | None -> raise (Failure "Intermediate code generation error!")
       | Some p -> p)
-  (* |> (fun s -> (Printf.printf "\nIntermediate Code:\n%s" (Intermediate.show_irc s)); print_newline(); flush stdout; s) *)
+  |> (fun s -> (Printf.printf "\nIntermediate Code:\n%s" (Intermediate.show_irc s)); print_newline(); flush stdout; s)
   |> codeGen
   |> (fun s -> match s with
       | None -> raise (Failure "VM code generation error!")
       | Some p -> p)
-  (* |> (fun s -> (Printf.printf "\nVM Code:\n%s" (String.concat "\n" (List.map Vm.show_instructions s))); print_newline(); flush stdout; s) *)
+  |> (fun s -> (Printf.printf "\nVM Code:\n%s" (String.concat "\n" (List.map Vm.show_instructions s))); print_newline(); flush stdout; s)
   |> Vm.run
 
 (* Testing *)
@@ -114,5 +114,9 @@ let testTypeChecker =
 
 (* let _ = testParser *)
 
-
-let _ = compiler "./tests/normalizeTest2.go" 
+let _ = 
+  if (Array.length Sys.argv < 2) then
+    raise (Invalid_argument "Usage: ./calc.native (filename)")
+  else
+    let src = Sys.argv.(1) in
+    compiler src

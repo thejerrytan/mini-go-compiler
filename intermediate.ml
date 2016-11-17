@@ -3,7 +3,7 @@
 open Go
 
 let tbl = Hashtbl.create 1000 (* hashtable to hold string variable names to memloc int mapping *)
-let nameSupply = ref 0
+let nameSupply = ref (-1)
 let freshName _ = nameSupply := !nameSupply + 1;
                 !nameSupply (* here we let temp variables be int which allows us to do a direct mapping to int memloc later *)
 let labelSupply = ref 1
