@@ -5,4 +5,4 @@ lexer.ml
 *.cmo
 *.cmi
 calc
-
+testTypeChecker

@@ -46,14 +46,6 @@ let parserTests = [
   (* "./tests/normalizeTest.go" *)
 ]
 
-let typeCheckerTests = [
-  "./tests/typeCheckerDeclarationsTest.go";
-  "./tests/typeCheckerFunctionTest.go";
-  "./tests/typeCheckerSampleProgram.go";
-  "./tests/typeCheckerRecursiveFunction.go";
-  "./tests/typeCheckerMutuallyRecursiveFunction.go"
-]
-
 (* Returns filename and AST tuple, given filename *)
 let parseAst src =
   match (parser src) with
@@ -81,18 +73,9 @@ let testParser =
   let parserAstList = List.map parseAst parserTests in
   	List.map printAst parserAstList
 
-let testAst (src, ast) = match typeCheckProg [] ast with
-                         | Some ast -> Printf.printf "%s" (print_prog 0 ast); print_newline(); flush stdout;
-                         | None -> Printf.printf "%s" "fail"; print_newline(); flush stdout
-
-let testTypeChecker =
-  let parserAstList = List.map parseAst typeCheckerTests in
-    List.map testAst parserAstList
-
 (* let testNormParser =
   let parserNormAstList = List.map parseNormAst parserTests in
     List.map printNormAst parserNormAstList *)
 
 let _ = testParser
-let _ = testTypeChecker
 (* let _ = testNormParser  *)

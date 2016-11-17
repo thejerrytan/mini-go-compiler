@@ -10,3 +10,7 @@ ocamlc -c -g ty.ml
 # ocamlc -c -g vm.ml
 ocamlc -c -g calc.ml
 ocamlc -g -o calc go.cmo lexer.cmo ty.cmo parser.cmo calc.cmo
+
+# For tests
+ocamlc -c -g testTypeChecker.ml
+ocamlc -g -o testTypeChecker go.cmo lexer.cmo ty.cmo parser.cmo testTypeChecker.cmo
