@@ -17,10 +17,20 @@
 (* Correctly fail with paramters type and not being given the right kind of types *)
 
 func ping(a int) int {
+  if true {
+    b := 1;
+    c := 2
+  } else {
+    d := 3
+  };
   return a
 }
 
 {
+  while true {
+    b := 1;
+    c := 2
+  };
   a := true;
   f := !false;
   f := !a

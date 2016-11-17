@@ -201,7 +201,12 @@ let rec augmentStatement env stmt = match stmt with
   | Go s -> (match augmentStatement env s with
             | Some s1 -> Some (Go (s1))
             | None -> None)
-            (* Account for ITE and While and DeclChan *)
+  | ITE (e, (Locals (l1), s1), (Locals (l2), s2)) -> (match (augmentStatement env s1, augmentStatement env s2) with
+                                                     | (Some stmt1, Some stmt2) -> Some (ITE (e, (Locals (l1), stmt1), (Locals (l2), stmt2)))
+                                                     | _ -> None)
+  | While (e, (Locals (l), s)) -> (match augmentStatement env s with
+                                  | Some stmt1 -> Some (While (e, (Locals (l), stmt1)))
+                                  | _ -> None)
   | _ -> Some stmt
 
 let rec typeCheckProc env proc = match proc with
@@ -241,14 +246,15 @@ let rec makeLocalsKnown env stmt = match stmt with
             | None -> None)
   | DeclChan v -> Some (update (v, TyChan (TyInt)) env, stmt)
   | _ -> Some (env, stmt)
-(* TODO: make locals known in stmt and pass environment from seq 1 to seq 2 and account for ITE and the rest *)
-(* TODO: enrich decl in proc *)
 
 let augmentProc env proc = match proc with
   | Proc (v, etl, ot, ls) -> let l1 = updateEnvironmentWithExpressionTypeList etl in
                              match ls with
-                             | (Locals (l), s) -> match makeLocalsKnown (env @ l1) s with
-                                                  | Some (env1, s1) -> Proc (v, etl, ot, (Locals (env1), s1))
+                             | (Locals (l), s) -> (match augmentStatement l1 s with
+                                                  | Some s1 -> (match makeLocalsKnown (env @ l1) s1 with
+                                                               | Some (env1, s2) -> Proc (v, etl, ot, (Locals (List.filter (fun x -> match snd x with
+                                                                                                                                     | TyFunc (ts1, Some t1) -> false
+                                                                                                                                     | _ -> true) env1), s2))))
                              (* we assume that before we augment any proc,
                              the initial state of locals is an empty list so we ignore it *)
 
@@ -270,6 +276,8 @@ let rec typeCheckProg env prog = match prog with
                                        let typeCheckedStatements = typeCheckStmt (List.map (fun something -> match something with Some (s, t) -> (s, t)) env1) s in
                                          match (numberOfFailures, typeCheckedStatements) with
                                          | (0, Some env) -> (match augmentStatement env s with
-                                                            | Some s -> Some (Prog (augmentedProcl, s))
+                                                            | Some s -> (match makeLocalsKnown env s with
+                                                                        | Some (env, s) -> Some (Prog (augmentedProcl, s))
+                                                                        | None -> None)
                                                             | None -> None)
                                          | _ -> None
