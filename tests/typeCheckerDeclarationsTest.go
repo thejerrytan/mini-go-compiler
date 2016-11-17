@@ -28,15 +28,12 @@
   h = 100 * c;             (* Assign int Literal times int var *)
   h = d / c;               (* Assign int var Divide int var *)
 
-  return 1;                 (* Return int *)
-  return false;             (* Return bool Literal *)
-  return true && false;     (* Return bool Literal And bool Literal *)
-  return c + d;             (* Return int var + int var *)
-
   go {              (* Go *)
     b := true;      (* Decl *)
     while (b) {     (* While *)
       print(1 + 1)    (* Print *)
     }
-  }
+  };
+
+  return 1                 (* Return int *)
 }

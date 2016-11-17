@@ -53,7 +53,7 @@ let parserTests = [
 ]
 
 let typeCheckerTests = [
-  (* "./tests/typeCheckerDeclarationsTest.go"; *)
+  "./tests/typeCheckerDeclarationsTest.go";
   "./tests/typeCheckerFunctionTest.go";
   "./tests/typeCheckerFunctionFailureTest.go";
   "./tests/typeCheckerSampleProgram.go";
