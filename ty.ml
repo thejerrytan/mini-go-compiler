@@ -184,8 +184,6 @@ let rec isHaveReturnsInStatement s = match s with
                                                      | (Some s1, Some s2) -> Some s1
                                                      | _ -> None)
   | _ -> Some s (* For any other statement that is not a return, we can simply just say it's a pass with a Some *)
-  (* TODO: Write in readme as to why we didn't check for Go block returns *)
-  (* TODO: Write in readme as to we allow for redeclaration but it might lead to unspecified behaviors *)
 
 let extractTypes etl = List.map (fun(vt) -> match vt with
                                             (Var v, t) -> t) etl
@@ -194,23 +192,25 @@ let rec augmentStatement env stmt = match stmt with
   | Decl (it, v, e) -> let r = inferTyExp env e in
                        (match r with
                        | None -> None
-                       | Some t -> Some (Decl (Some (t), v, e)))
-  | Seq (s1, s2) -> (match (augmentStatement env s1, augmentStatement env s2) with
-                    | (Some stmt1, Some stmt2) -> Some (Seq (stmt1, stmt2))
+                       | Some t -> Some (update (v, t) env, Decl (Some (t), v, e)))
+  | Seq (s1, s2) -> (match augmentStatement env s1 with
+                    | Some (env1, stmt1) -> (match augmentStatement env1 s2 with
+                                            | Some (env2, stmt2) -> Some (env2, Seq (stmt1, stmt2))
+                                            | _ -> None)
                     | _ -> None)
   | Go s -> (match augmentStatement env s with
-            | Some s1 -> Some (Go (s1))
+            | Some (env1, s1) -> Some (env, Go (s1))
             | None -> None)
   | ITE (e, (Locals (l1), s1), (Locals (l2), s2)) -> (match (augmentStatement env s1, augmentStatement env s2) with
-                                                     | (Some stmt1, Some stmt2) -> Some (ITE (e, (Locals (l1), stmt1), (Locals (l2), stmt2)))
+                                                     | (Some (env1, stmt1), Some (env2, stmt2)) -> Some (env, ITE (e, (Locals (l1), stmt1), (Locals (l2), stmt2)))
                                                      | _ -> None)
   | While (e, (Locals (l), s)) -> (match augmentStatement env s with
-                                  | Some stmt1 -> Some (While (e, (Locals (l), stmt1)))
+                                  | Some (env1, stmt1) -> Some (env, While (e, (Locals (l), stmt1)))
                                   | _ -> None)
-  | _ -> Some stmt
+  | _ -> Some (env, stmt)
 
 let rec typeCheckProc env proc = match proc with
-  | Proc (v, etl, ot, (Locals (l), s)) -> (let Some s = augmentStatement l s in match ot with
+  | Proc (v, etl, ot, (Locals (l), s)) -> (let Some (e, s) = augmentStatement l s in match ot with
                                           | Some t -> (match checkAllReturnType l s t with
                                                       | None -> None (* Func has return type, not all return statements are of correct type *)
                                                       | Some env -> Some (v, TyFunc (extractTypes etl, ot))) (* Func has return type, all returns has same type *)
@@ -238,7 +238,7 @@ let rec makeLocalsKnown env stmt = match stmt with
                                                       | None -> None)
   | Seq (s1, s2) -> (match makeLocalsKnown env s1 with
                     | Some (env1, s3) -> (match makeLocalsKnown env1 s2 with
-                                         | Some (env2, s4) -> Some (env, Seq (s3, s4))
+                                         | Some (env2, s4) -> Some (env2, Seq (s3, s4))
                                          | None -> None)
                     | None -> None)
   | Go s -> (match makeLocalsKnown env s with
@@ -251,8 +251,8 @@ let augmentProc env proc = match proc with
   | Proc (v, etl, ot, ls) -> let l1 = updateEnvironmentWithExpressionTypeList etl in
                              match ls with
                              | (Locals (l), s) -> (match augmentStatement l1 s with
-                                                  | Some s1 -> (match makeLocalsKnown (env @ l1) s1 with
-                                                               | Some (env1, s2) -> Proc (v, etl, ot, (Locals (env1), s2))))
+                                                  | Some (e, s1) -> (match makeLocalsKnown (env @ l1) s1 with
+                                                                    | Some (env1, s2) -> Proc (v, etl, ot, (Locals (env1), s2))))
                              (* we assume that before we augment any proc,
                              the initial state of locals is an empty list so we ignore it *)
 
@@ -289,8 +289,8 @@ let rec typeCheckProg env prog = match prog with
                                          let filteredAugmentedProcl = filterTyFuncs augmentedProcl in
                                            match (numberOfFailures, typeCheckedStatements) with
                                            | (0, Some env) -> (match augmentStatement env s with
-                                                              | Some s -> (match makeLocalsKnown env s with
-                                                                          | Some (env, s) -> Some (Prog (filteredAugmentedProcl, s))
-                                                                          | None -> None)
+                                                              | Some (e, s) -> (match makeLocalsKnown env s with
+                                                                               | Some (env, s) -> Some (Prog (filteredAugmentedProcl, s))
+                                                                               | None -> None)
                                                               | None -> None)
                                            | _ -> None

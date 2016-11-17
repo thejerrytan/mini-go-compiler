@@ -12,6 +12,8 @@
   e = a && b;      (* And between 2 bools *)
   e = a && b == e; (* And between 2 bools equals between 2 bools *)
 
+  a := 1;          (* ReDecl of bool var into int var after using it to decalre f as not of bool var *)
+
   abcd := newChannel;   (* DeclChan var *)
   j := newChannel;      (* DeclChan name *)
 

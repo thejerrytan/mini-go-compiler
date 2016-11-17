@@ -44,18 +44,11 @@ let parserTests = [
 	(* "./tests/ex2.go"; *)
 	(* "./tests/ex3.go" *)
   (* "./tests/normalizeTest.go" *)
-  (* "./tests/typeCheckerDeclarationsTest.go" *)
-  (* "./tests/typeCheckerFunctionTest.go" *)
-  (* "./tests/typeCheckerFunctionFailureTest.go" *)
-  (* "./tests/typeCheckerSampleProgram.go" *)
-  (* "./tests/typeCheckerRecursiveFunction.go" *)
-  (* "./tests/typeCheckerMutuallyRecursiveFunction.go" *)
 ]
 
 let typeCheckerTests = [
   "./tests/typeCheckerDeclarationsTest.go";
   "./tests/typeCheckerFunctionTest.go";
-  "./tests/typeCheckerFunctionFailureTest.go";
   "./tests/typeCheckerSampleProgram.go";
   "./tests/typeCheckerRecursiveFunction.go";
   "./tests/typeCheckerMutuallyRecursiveFunction.go"
@@ -100,6 +93,6 @@ let testTypeChecker =
   let parserNormAstList = List.map parseNormAst parserTests in
     List.map printNormAst parserNormAstList *)
 
-let _ = testTypeChecker
 let _ = testParser
+let _ = testTypeChecker
 (* let _ = testNormParser  *)
