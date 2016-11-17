@@ -11,7 +11,7 @@ For parser:
 1. The parser will spit out an AST that is not yet enriched with empty locals as long as the program is
 correct in terms of grammar, it doesn't matter if the type checking will fail the program along with the file name,
 compare the AST against the file name to see the program and check if the program is valid
-2. For invalid parsing, the parser tests will print "Failed with %s" reason along with the file name,
+2. For invalid parsing, the parser tests will print "Failed with reason: %s" reason along with the file name,
 open the file with the file name in order to see the invalid program and a comment on why the program is invalid
 and thus should be parsed as invalid
 

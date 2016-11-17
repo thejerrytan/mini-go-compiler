@@ -14,3 +14,6 @@ ocamlc -g -o calc go.cmo lexer.cmo ty.cmo parser.cmo calc.cmo
 # For tests
 ocamlc -c -g testTypeChecker.ml
 ocamlc -g -o testTypeChecker go.cmo lexer.cmo ty.cmo parser.cmo testTypeChecker.cmo
+
+ocamlc -c -g testParser.ml
+ocamlc -g -o testParser go.cmo lexer.cmo parser.cmo testParser.cmo

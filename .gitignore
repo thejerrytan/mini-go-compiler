@@ -6,3 +6,4 @@ lexer.ml
 *.cmi
 calc
 testTypeChecker
+testParser
