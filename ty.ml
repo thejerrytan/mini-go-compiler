@@ -252,9 +252,7 @@ let augmentProc env proc = match proc with
                              match ls with
                              | (Locals (l), s) -> (match augmentStatement l1 s with
                                                   | Some s1 -> (match makeLocalsKnown (env @ l1) s1 with
-                                                               | Some (env1, s2) -> Proc (v, etl, ot, (Locals (List.filter (fun x -> match snd x with
-                                                                                                                                     | TyFunc (ts1, Some t1) -> false
-                                                                                                                                     | _ -> true) env1), s2))))
+                                                               | Some (env1, s2) -> Proc (v, etl, ot, (Locals (env1), s2))))
                              (* we assume that before we augment any proc,
                              the initial state of locals is an empty list so we ignore it *)
 
@@ -263,6 +261,20 @@ let removeOptionForEnv env = List.map (fun pair -> match pair with
 
 let prototypeEnvFromProcl procl = List.map (fun proc -> match proc with
                                                         | Proc (v, etl, ot, (Locals (l), s)) -> Some (v, TyFunc (extractTypes etl, ot))) procl
+
+let filterTyFuncAnotherHelper lst = List.filter (fun y -> (match snd y with
+                                                           | TyFunc (ts1, Some t1) -> false
+                                                           | _ -> true)) lst
+
+let rec filterTyFuncHelper s = (match s with
+  | While (e, (Locals (l), s)) -> While (e, (Locals (filterTyFuncAnotherHelper l), filterTyFuncHelper s))
+  | ITE (e, (Locals (l1), s1), (Locals (l2), s2)) -> ITE (e, (Locals (filterTyFuncAnotherHelper l1), filterTyFuncHelper s1), (Locals (filterTyFuncAnotherHelper l2), filterTyFuncHelper s2))
+  | Seq (s1, s2) -> Seq (filterTyFuncHelper s1, filterTyFuncHelper s2)
+  | Go s -> Go (filterTyFuncHelper s)
+  | _ -> s)
+
+let rec filterTyFuncs procl = List.map (fun x -> match x with
+                                                 | Proc (v, etl, ot, (Locals (l), s)) -> Proc (v, etl, ot, (Locals (filterTyFuncAnotherHelper l), filterTyFuncHelper s))) procl
 
 let rec typeCheckProg env prog = match prog with
   | Prog (procl, s) -> let prototypeEnv = prototypeEnvFromProcl procl in
@@ -274,10 +286,11 @@ let rec typeCheckProg env prog = match prog with
                                    let numberOfFailures = List.length failures in
                                      if numberOfFailures <> 0 then None else
                                        let typeCheckedStatements = typeCheckStmt (List.map (fun something -> match something with Some (s, t) -> (s, t)) env1) s in
-                                         match (numberOfFailures, typeCheckedStatements) with
-                                         | (0, Some env) -> (match augmentStatement env s with
-                                                            | Some s -> (match makeLocalsKnown env s with
-                                                                        | Some (env, s) -> Some (Prog (augmentedProcl, s))
-                                                                        | None -> None)
-                                                            | None -> None)
-                                         | _ -> None
+                                         let filteredAugmentedProcl = filterTyFuncs augmentedProcl in
+                                           match (numberOfFailures, typeCheckedStatements) with
+                                           | (0, Some env) -> (match augmentStatement env s with
+                                                              | Some s -> (match makeLocalsKnown env s with
+                                                                          | Some (env, s) -> Some (Prog (filteredAugmentedProcl, s))
+                                                                          | None -> None)
+                                                              | None -> None)
+                                           | _ -> None
