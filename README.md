@@ -38,6 +38,8 @@ There is no output for type checking, if intermediate code is printed it is assu
 
 If compilation fails at any of the stages, the print output for later stages will not be shown.
 
+To get started, you can try the files in the tests folder.
+
 2. To run the parser tests, run 
 
 ```bash
