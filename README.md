@@ -2,7 +2,7 @@
 
 1. Jerry Tan - A0097689Y
 2. Andhieka Putra - A0113672L
-3. Yap Jun Hao - 
+3. Yap Jun Hao - A0113694A
 
 # How to Build (Note the following instructions are for mac/linux users)
 
@@ -30,9 +30,20 @@ resolve this: `./_build/sanitize.sh`.
 ./calc.native "filename relative to project root"
 ```
 
+This can be used for testing specific source files.
+
 Prints AST before and after normalization, Intermediate code and finally list of VM instructions
 
-2. To run the parser tests, run ./testParser in the shell, optionally write the output into a file
+There is no output for type checking, if intermediate code is printed it is assumed the program type checks.
+
+If compilation fails at any of the stages, the print output for later stages will not be shown.
+
+2. To run the parser tests, run 
+
+```bash
+./testParser 
+```
+in the shell, optionally write the output into a file
 
 3. To run the type checker tests, run ./testTypeChecker in the shell, optionally write the output into a file
 
@@ -59,6 +70,7 @@ validity of the program
 1. We do not allow uppercase characters.
 2. We do not allow _ and punctuation in function names and variables
 3. Function names and variable names must start with a lowercase character
+4. Recognition of NAME and VAR is being done at this stage
 
 ## Parser
 1. We did not check for Go block returns as we think it does not make sense for there to be returns in concurrency blocks
@@ -67,12 +79,11 @@ validity of the program
 4. Procedure with declared return type must end with a return statement
 
 ## Normalize
-1. We removed all side effects from the AST and replaced them with Skip/Halt statements subsequently in later stages
+1. We removed all side effects from the AST and replaced them with Skip statements subsequently in later stages
 2. We renamed all variables and locals into distinct names using freshName to ensure proper lookup of variables in later stages
 
 ## Intermediate
 1. We tried our best to implement code for procedure, function calls and function expressions.
-2. 
 
 ## Codegen
 1. We rename distinct variable names to distinct integers corresponding to mem locations which can be used directly in VM code generation.
@@ -80,4 +91,5 @@ validity of the program
 ## VM
 1. Arithmetic expressions are working
 2. Boolean short circuit evaluations are supported
-3. Function calls, expressions compiles into VM instructions, but have not tested to be working
+3. Control-flow statements are supported
+4. Function calls, expressions compiles into VM instructions, but have not tested to be working

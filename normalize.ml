@@ -5,8 +5,7 @@ let nameSupply = ref 0
 let freshName _ =  nameSupply := !nameSupply + 1;
                    String.concat "" ["temp" ; string_of_int (!nameSupply )] 
 let rec lookup (x: string) (xs : (string * Go.types) list) = 
-  let ys = (x, TyInt)::xs in
-  match List.filter (fun el -> (fst el) = x) ys with
+  match List.filter (fun el -> (fst el) = x) xs with
   | [(n, t)] -> Some (n, t)
   | _ -> None
 

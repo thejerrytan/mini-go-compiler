@@ -15,7 +15,7 @@ and locking memory cells.
 
 type instructions =
                   Halt
-    
+                  | Skip
                   (* Stack operations 
  
                       PopS simply drops top-most value
@@ -178,6 +178,8 @@ let dec r = r := !r - 1
                     
 let singleStep st id mem memLock t = match (List.nth t.code !(t.pc)) with
   | Halt ->   true
+  | Skip -> inc t.pc;
+            false
   | PushS i -> t.stack.(!(t.sp)) <- i;
                inc t.pc;
                inc t.sp;

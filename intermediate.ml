@@ -12,6 +12,8 @@ let freshLabel _ =  labelSupply := !labelSupply + 1;
                     !labelSupply
 let lookup var = try(Hashtbl.find tbl var) with
                   | Not_found -> print_endline ("[Intermediate] Cannot find var: " ^ var);1
+let lookupLocals func = try(Hashtbl.find funcLocals func) with
+  | Not_found -> print_endline ("[Intermediate] Cannot find function " ^ func); []
 
 type irc = IRC of (irc_cmd list)
 [@@deriving show]
@@ -163,7 +165,7 @@ let rec translateB exp = match exp with
                      let res = List.fold_left (fun acc el -> acc@(fst el)) [] expls in
                      let eval = List.fold_left (fun acc el -> acc@[snd el]) [] expls in
                      let initParams = List.map (fun el -> IRC_Param el) eval in
-                     let initLocals = List.map (fun el -> IRC_Param (lookup el)) (Hashtbl.find funcLocals s) in
+                     let initLocals = List.map (fun el -> IRC_Param (lookup el)) (lookupLocals s) in
                      (res
                       @ initLocals
                       @ initParams
@@ -216,7 +218,7 @@ let rec translateStmt s : (irc_cmd list) = match s with
                            let res = List.fold_left (fun acc el -> acc@(fst el)) [] expls in
                            let eval = List.fold_left (fun acc el -> acc@[snd el]) [] expls in
                            let initParams = List.map (fun el -> IRC_Param el) eval in
-                           let initLocals = List.map (fun el -> IRC_Param (lookup el)) (Hashtbl.find funcLocals s1) in
+                           let initLocals = List.map (fun el -> IRC_Param (lookup el)) (lookupLocals s1) in
                            let l1 = freshLabel() in
                            res
                            @ initLocals
@@ -238,6 +240,7 @@ let translateProc func : (irc_cmd list) = match func with
   | Proc (name, args, ty, (locals, stmt)) -> let lcls = removeTypes locals in
                                                 let l1 = freshLabel() in
                                                 Hashtbl.add funcLocals name lcls;
+                                                print_endline ("Added locals for " ^ name);
                                                 [IRC_Label l1]
                                                 @ [IRC_Proc (lcls, name, l1)]
                                                 @ translateStmt stmt
@@ -246,5 +249,6 @@ let translateProcs procs : (irc_cmd list) =
   List.flatten (List.map translateProc procs)
 
 let rec translateProg p : irc option = match p with
-  | Prog (procs, stmt) -> Some (IRC ((translateProcs procs) @ (translateStmt stmt)))
-
+  | Prog (procs, stmt) -> let procs_cmd = translateProcs procs in
+                          let main = translateStmt stmt in
+                          Some (IRC (procs_cmd @ main))
