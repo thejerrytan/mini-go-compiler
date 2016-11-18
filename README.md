@@ -15,11 +15,11 @@ opam install ppx_deriving
 #### 2. Build
 
 ```bash
-ocamlbuild -use-ocamlfind 'calc.native'
+./run.sh
 ```
 
 You may encounter an error for the first time because of residual file
-from our previous manual build (run.sh). Just follow the instruction to
+if you previously do a manual build. Just follow the instruction to
 resolve this: `./_build/sanitize.sh`.
 
 #### 3. Running and testing
