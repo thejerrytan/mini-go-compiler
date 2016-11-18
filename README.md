@@ -82,9 +82,12 @@ validity of the program
 2. We would like to forbid redeclaration of variables within same scope, but we did not implement it at the parser stage. It will ultimately fail at code generation stage.
 3. The AST pretty printer is written by us and we think it suits our context better
 4. Procedure with declared return type must end with a return statement
+5. Note that the last statement in a code block must not end with a semicolon, if (exp) { stmt } else { stmt } is also considered a statement, while (exp) { stmt } is also considered a statement and must obey this rule.
 
 ## Typechecker
 1. We collected all locals while threading through the environment
+2. We support recursive functions and mutually recursive functions
+3. We support typechecking in procedures with return statements in if else control-flow statements
 
 ## Normalize
 1. We removed all side effects from the AST and replaced them with Skip statements subsequently in later stages
