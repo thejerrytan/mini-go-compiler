@@ -176,7 +176,7 @@ let inc r = r := !r + 1
 let dec r = r := !r - 1 
                      
                     
-let singleStep st id mem memLock t = match (List.nth t.code !(t.pc)) with
+let singleStep st id mem memLock t = print_endline (string_of_int !(t.pc)); match (List.nth t.code !(t.pc)) with
   | Halt ->   true
   | Skip -> inc t.pc;
             false

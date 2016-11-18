@@ -7,6 +7,6 @@ func sum(a int, b int) int {
 }
 
 { 
-  a := 1 + 2 + sum(12, 777);
+  a := 1 + 2;
   return a
 }

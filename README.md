@@ -15,11 +15,11 @@ opam install ppx_deriving
 #### 2. Build
 
 ```bash
-ocamlbuild -use-ocamlfind 'calc.native'
+./run.sh
 ```
 
 You may encounter an error for the first time because of residual file
-from our previous manual build (run.sh). Just follow the instruction to
+if you previously do a manual build. Just follow the instruction to
 resolve this: `./_build/sanitize.sh`.
 
 #### 3. Running and testing
@@ -80,7 +80,7 @@ validity of the program
 
 ## Normalize
 1. We removed all side effects from the AST and replaced them with Skip statements subsequently in later stages
-2. We renamed all variables and locals into distinct names using freshName to ensure proper lookup of variables in later stages
+2. We renamed all variables, locals and procedure arguments into distinct names using freshName to ensure proper lookup of variables in later stages
 
 ## Intermediate
 1. We tried our best to implement code for procedure, function calls and function expressions.
