@@ -56,7 +56,6 @@ let compiler src = src
   |> (fun s -> match s with
       | None -> raise (Failure "Intermediate code generation error!")
       | Some p -> p)
-(*   |> Intermediate.remove_skips *)
   |> (fun s -> (Printf.printf "\nIntermediate Code:\n%s" (Intermediate.show_irc s)); print_newline(); flush stdout; s)
   |> codeGen
   |> (fun s -> match s with

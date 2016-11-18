@@ -13,13 +13,14 @@ let renameLocal locals tbl x = match locals with
   | Locals(xs) -> match lookup x xs with
                   | Some (n, t) -> let newName = freshName() in
                                     Hashtbl.add tbl x newName;
+                                    print_endline newName;
                                     Locals((newName, t)::(List.filter (fun el -> fst el <> x) xs)), tbl
                   | None -> locals, tbl
 
 let renameVar tbl x = try( Hashtbl.find tbl x) with Not_found -> x  (* x -> y mapping must exist first *)
 let remapLocal locals tbl = match locals with
   | Locals(xs) -> let ys = List.map (fun el -> let newName = freshName() in 
-                           Hashtbl.add tbl (fst el) newName; print_endline newName; el) xs in 
+                           Hashtbl.add tbl (fst el) newName; el) xs in 
                   Locals(ys), tbl
 let renameArgs locals tbl args = locals, tbl, List.map 
   (fun el -> match (fst el) with 
@@ -68,35 +69,35 @@ let rec renameStmt lcls init_tbl s =
   match s with
   | Seq (s1, s2) -> let (locals_s1, tbl_s1, stmt1) = renameStmt locals tbl s1 in
                     let (locals_s2, tbl_s2, stmt2) = renameStmt locals_s1 tbl_s1 s2 in
-                    locals_s2, tbl_s2, Seq(stmt1, stmt2)
+                    locals, tbl_s2, Seq(stmt1, stmt2)
   | Go (s1) -> let r = renameStmt locals tbl s1 in 
                (getFst r, getSnd r, Go(getTrd r))
   | Transmit (s1, e1) -> let r1 = renameVar tbl s1 in
                          let r2 = renameExp locals tbl e1 in
-                         (getFst r2, getSnd r2, Transmit(r1, getTrd r2))
+                         (locals, getSnd r2, Transmit(r1, getTrd r2))
   | RcvStmt (s1) -> let r = renameVar tbl s1 in
                     (locals, tbl, RcvStmt (r))
   | Decl (t, s1, e1) -> let s2 = freshName() in Hashtbl.add tbl s1 s2;
                         let r1 = renameLocal locals tbl s1 in
                         let r2 = renameExp (fst r1) (snd r1) e1 in
-                        (getFst r2, getSnd r2, Decl (t, renameVar (getSnd r2) s1, getTrd r2))
+                        (locals, getSnd r2, Decl (t, renameVar (getSnd r2) s1, getTrd r2))
   | DeclChan (s1) -> let r1 = renameLocal locals tbl s1 in
-                      (fst r1, snd r1, DeclChan(renameVar (snd r1) s1))
+                      (locals, snd r1, DeclChan(renameVar (snd r1) s1))
   | Assign (s1, e1) -> let r1 = renameExp locals tbl e1 in
-                        (getFst r1, getSnd r1, Assign(renameVar (getSnd r1) s1, getTrd r1))
+                        (locals, getSnd r1, Assign(renameVar (getSnd r1) s1, getTrd r1))
   | While (e1, (locals_s1, s1)) -> let r1 = renameExp locals tbl e1 in
                                    let r2 = renameStmt locals_s1 tbl s1 in
-                                   (getFst r2, getSnd r2, While(getTrd r1, (getFst r2, getTrd r2)))
+                                   (locals, getSnd r2, While(getTrd r1, (getFst r2, getTrd r2)))
   | ITE (e1, (locals_s1, s1), (locals_s2, s2)) -> let r1 = renameExp locals tbl e1 in
                                                   let r2 = renameStmt locals_s1 (getSnd r1) s1 in
                                                   let r3 = renameStmt locals_s2 (getSnd r1) s2 in
-                                                  (getFst r3, getSnd r3, ITE(getTrd r1, (getFst r2, getTrd r2), (getFst r3, getTrd r3)))
+                                                  (locals, getSnd r3, ITE(getTrd r1, (getFst r2, getTrd r2), (getFst r3, getTrd r3)))
   | Return (e1) -> let r1 = renameExp locals tbl e1 in
                    (locals, getSnd r1, Return (getTrd r1))
   | FuncCall (s1, es) -> let r1 = List.map (renameExp locals tbl) es in
-                         (getFst (List.hd r1), tbl, FuncCall(s1, List.map getTrd r1))
+                         (locals, tbl, FuncCall(s1, List.map getTrd r1))
   | Print (e1) -> let r1 = renameExp locals tbl e1 in
-                  (getFst r1, getSnd r1, Print(getTrd r1))
+                  (locals, getSnd r1, Print(getTrd r1))
   | Skip -> (locals, tbl, Skip)
 
 

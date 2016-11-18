@@ -44,7 +44,7 @@ let codegen i (irc : Intermediate.irc) = match irc with
 											(fst ls)+1, (snd ls)@[Jump l1]
 					| IRC_Return (x) -> (fst ls)+1, (snd ls)@[PushE ((fst ls)+2)] (* +2 because we want to skip the following Jump for FuncCall *)
 (* 					| IRC_Get (s1) -> (fst ls)+2 (snd ls)@[AssignFromEnv (1, s1);PopE] *)
-					| IRC_Proc (lcls, name, l1) -> Hashtbl.add funcTbl name l1;print_endline ("Added label for func : " ^name);(fst ls), (snd ls)@[]
+					| IRC_Proc (lcls, name, l1) -> Hashtbl.add funcTbl name l1;(fst ls), (snd ls)@[]
 					| IRC_Skip -> (fst ls)+1, (snd ls)@[Skip]
 				) (i , []) cmds in
 			  print_endline ("No. of VM instructions : " ^ string_of_int ((fst res)+1));

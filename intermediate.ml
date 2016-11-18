@@ -240,7 +240,6 @@ let translateProc func : (irc_cmd list) = match func with
   | Proc (name, args, ty, (locals, stmt)) -> let lcls = removeTypes locals in
                                                 let l1 = freshLabel() in
                                                 Hashtbl.add funcLocals name lcls;
-                                                print_endline ("Added locals for " ^ name);
                                                 [IRC_Label l1]
                                                 @ [IRC_Proc (lcls, name, l1)]
                                                 @ translateStmt stmt

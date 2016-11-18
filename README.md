@@ -41,11 +41,16 @@ If compilation fails at any of the stages, the print output for later stages wil
 2. To run the parser tests, run 
 
 ```bash
-./testParser 
+./testParser.native
 ```
-in the shell, optionally write the output into a file
+in the shell
 
-3. To run the type checker tests, run ./testTypeChecker in the shell, optionally write the output into a file
+3. To run the type checker tests, run 
+
+```bash
+./testTypeChecker.native
+```
+ in the shell
 
 # Notes on the tests
 
@@ -77,6 +82,9 @@ validity of the program
 2. We would like to forbid redeclaration of variables within same scope, but we did not implement it at the parser stage. It will ultimately fail at code generation stage.
 3. The AST pretty printer is written by us and we think it suits our context better
 4. Procedure with declared return type must end with a return statement
+
+## Typechecker
+1. We collected all locals while threading through the environment
 
 ## Normalize
 1. We removed all side effects from the AST and replaced them with Skip statements subsequently in later stages
