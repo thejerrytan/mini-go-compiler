@@ -1,10 +1,8 @@
 func s(a int, b int) int {
-	return a + b * 2 + 3
+	return 1
 }
 
 { 
-  a := 1 + 2 + s(99, 777);
-  b = 1 + 2 * sum(1, a);
-
+  a := 1 + 2 + s(12, 777);
   return a
 }
