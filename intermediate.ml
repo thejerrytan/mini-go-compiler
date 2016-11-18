@@ -248,3 +248,5 @@ let translateProcs procs : (irc_cmd list) =
 let rec translateProg p : irc option = match p with
   | Prog (procs, stmt) -> Some (IRC ((translateProcs procs) @ (translateStmt stmt)))
 
+let remove_skips irc = match irc with
+  | IRC cmds -> IRC (List.filter (fun s -> s <> IRC_Skip) cmds)
