@@ -5,5 +5,12 @@ lexer.ml
 *.cmo
 *.cmi
 calc
+<<<<<<< HEAD
 testTypeChecker
 testParser
+=======
+
+_build/*
+*.native
+tmp*
+>>>>>>> irc

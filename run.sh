@@ -1,19 +1,3 @@
-ocamllex lexer.mll       # generates lexer.ml
-ocamlyacc parser.mly     # generates parser.ml and parser.mli
-ocamlc -c -g go.ml
-ocamlc -c -g parser.mli
-ocamlc -c -g parser.ml
-ocamlc -c -g lexer.ml
-ocamlc -c -g ty.ml
-# ocamlc -c -g normalize.ml
-# ocamlc -c -g intermediate.ml
-# ocamlc -c -g vm.ml
-ocamlc -c -g calc.ml
-ocamlc -g -o calc go.cmo lexer.cmo ty.cmo parser.cmo calc.cmo
-
-# For tests
-ocamlc -c -g testTypeChecker.ml
-ocamlc -g -o testTypeChecker go.cmo lexer.cmo ty.cmo parser.cmo testTypeChecker.cmo
-
-ocamlc -c -g testParser.ml
-ocamlc -g -o testParser go.cmo lexer.cmo parser.cmo testParser.cmo
+ocamlbuild -use-ocamlfind 'calc.native'
+ocamlbuild -use-ocamlfind 'testTypeChecker.native'
+ocamlbuild -use-ocamlfind 'testParser.native'
